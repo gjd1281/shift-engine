@@ -48,8 +48,8 @@
   nav{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--line);
     border-radius:4px;overflow:hidden;margin-bottom:20px;background:var(--surface)}
   nav button{background:transparent;border:none;border-right:1px solid var(--line);
-    color:var(--muted);padding:11px 2px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
-    letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+    color:var(--muted);padding:11px 1px;font-family:'IBM Plex Mono',monospace;font-size:9px;
+    letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
   nav button:last-child{border-right:none}
   nav button[aria-selected=true]{background:var(--surface-2);color:var(--text);box-shadow:inset 0 -2px 0 var(--day)}
   .panel{display:none}.panel.on{display:block}
@@ -124,7 +124,7 @@
     padding:11px 0;border-bottom:1px solid var(--line)}
   .field label{font-size:14px}
   .field .unit{font-size:12px;color:var(--muted);margin-right:6px}
-  input[type=number],input[type=date],input[type=time],select{
+  input[type=number],input[type=date],input[type=time],input[type=text],select{
     background:var(--surface-2);border:1px solid var(--line);color:var(--text);
     font-family:'IBM Plex Mono',monospace;font-size:14px;padding:7px 9px;border-radius:4px}
   input[type=number],input[type=date]{width:136px;text-align:right}
@@ -264,7 +264,7 @@
   .viewBanner{background:color-mix(in srgb,var(--night) 18%,transparent);border:1px solid var(--night);
     border-radius:4px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.5}
   body.viewmode nav,body.viewmode #shareSec,body.viewmode #patternSec,
-  body.viewmode #themeSec,body.viewmode #editBtn{display:none!important}
+  body.viewmode #themeSec,body.viewmode #cribSec,body.viewmode #editBtn{display:none!important}
 
   /* ---- centre photo ---- */
   .core .photoWrap{width:96px;height:96px;border-radius:50%;overflow:hidden;
@@ -308,6 +308,38 @@
     line-height:1.8;margin:0 0 13px}
   .packList b{color:var(--text)}
   .quota{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-top:10px}
+
+  /* ---- crib ---- */
+  .subtabs{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);
+    border-radius:4px;overflow:hidden;margin:0 0 20px;background:var(--surface)}
+  .subtabs button{background:transparent;border:none;border-right:1px solid var(--line);
+    color:var(--muted);padding:11px 4px;font-family:'IBM Plex Mono',monospace;font-size:10px;
+    letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+  .subtabs button:last-child{border-right:none}
+  .subtabs button[aria-selected=true]{background:var(--surface-2);color:var(--text);
+    box-shadow:inset 0 -2px 0 var(--travel)}
+  .sub{display:none}.sub.on{display:block}
+  .gameWrap{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;
+    background:var(--surface);min-height:420px}
+  .gameWrap iframe{display:block;width:100%;height:480px;border:0;background:var(--surface)}
+  .gameNo{padding:30px 18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}
+  .scoreHero{background:linear-gradient(150deg,color-mix(in srgb,var(--travel) 12%,transparent),var(--surface));
+    border:1px solid var(--line);border-left:3px solid var(--travel);border-radius:4px;
+    padding:16px 15px;margin-top:16px}
+  .scoreHero .lab{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted)}
+  .scoreHero .n2{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:38px;line-height:1.1;
+    margin-top:6px;background:linear-gradient(96deg,var(--travel),var(--day));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .lbRow{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .lbPos{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);width:26px;flex:none}
+  .lbName{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lbScore{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600}
+  .lbRow.me .lbName{font-variation-settings:'wght' 700}
+  .lbRow.me .lbScore{color:var(--day)}
+  .crewIn{width:100%!important;text-align:left!important;letter-spacing:.18em;text-transform:uppercase}
+  .urlIn{width:100%!important;text-align:left!important;font-size:12px!important}
+
   footer{border-top:1px solid var(--line);padding-top:16px;margin-top:8px;font-size:12px;color:var(--muted)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -377,6 +409,11 @@
       <h1 class="sHead">Pick your look.</h1>
       <p class="sBody">Night shift needs a screen that won't blind you at three in the morning. Day shift in the sun needs the opposite. Change it any time.</p>
       <div class="themes" id="sThemes"></div>
+      <p class="sBody" style="margin:26px 0 0">There's a crib room tab as well — Load the Trucks and a leaderboard for your crew. Nothing to do with work. It stays out of the way unless you want it.</p>
+      <div class="seg" role="group">
+        <button id="sCribOff" aria-pressed="true">Leave it off</button>
+        <button id="sCribOn" aria-pressed="false">Turn Crib on</button>
+      </div>
       <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" id="sDone">Open my roster</button></div>
     </div>
   </div>
@@ -392,12 +429,13 @@
     <button id="editBtn">Edit</button>
   </header>
 
-  <nav role="tablist">
+  <nav role="tablist" id="mainNav">
     <button role="tab" aria-selected="true" data-tab="roster">Roster</button>
     <button role="tab" aria-selected="false" data-tab="pay">Pay</button>
     <button role="tab" aria-selected="false" data-tab="log">Log</button>
     <button role="tab" aria-selected="false" data-tab="skills">Skills</button>
     <button role="tab" aria-selected="false" data-tab="docs">Docs</button>
+    <button role="tab" aria-selected="false" data-tab="crib" id="cribTabBtn" style="display:none">Crib</button>
   </nav>
 
   <div class="panel on" id="tab-roster">
@@ -473,6 +511,15 @@
           <button class="ghost" id="shareText">Copy as a message</button>
         </div>
         <p class="hint" id="shareMsg" style="margin-bottom:0"></p>
+      </div>
+    </section>
+
+    <section id="cribSec">
+      <h2>Crib room</h2>
+      <p class="hint">A sixth tab with Load the Trucks and the crew leaderboard on it. Off by default — turn it on if the boys want a go at crib.</p>
+      <div class="seg" role="group">
+        <button id="cribOffBtn" aria-pressed="true">Off</button>
+        <button id="cribOnBtn" aria-pressed="false">On</button>
       </div>
     </section>
 
@@ -680,6 +727,62 @@
     </section>
   </div>
 
+  <div class="panel" id="tab-crib">
+    <div class="subtabs" role="tablist">
+      <button role="tab" aria-selected="true" data-sub="play">Load the Trucks</button>
+      <button role="tab" aria-selected="false" data-sub="board">Leaderboard</button>
+    </div>
+
+    <div class="sub on" id="sub-play">
+      <section style="margin-bottom:18px">
+        <div class="gameWrap" id="gameWrap">
+          <div class="gameNo" id="gameNo">
+            Load the Trucks lives in its own repo.<br>Paste its address below and it loads right here.
+          </div>
+        </div>
+        <div class="rowbtns">
+          <button class="ghost" id="gameReload">Restart</button>
+          <button class="ghost" id="gameOpen">Open full screen</button>
+        </div>
+        <div class="scoreHero">
+          <div class="lab">Your best</div>
+          <div class="n2" id="bestScore">—</div>
+          <div class="note" id="bestNote" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
+          <div class="rowbtns">
+            <button class="ghost" id="logScore">Log a score by hand</button>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Where the game lives</h2>
+        <p class="hint">Its own address, its own repo. Change it here if you move it — no need to touch the code.</p>
+        <input type="text" id="gameUrl" class="urlIn" placeholder="https://gjd1281.github.io/load-the-trucks/">
+        <div class="rowbtns"><button class="ghost" id="gameSave">Load it</button></div>
+        <p class="hint" id="gameMsg"></p>
+      </section>
+    </div>
+
+    <div class="sub" id="sub-board">
+      <section>
+        <h2>Crew code</h2>
+        <p class="hint">Same code on everyone's phone means the same board. No code, no board — keeps the crew's scores to the crew.</p>
+        <input type="text" id="crewCode" class="crewIn" placeholder="e.g. CALLIDE-NS">
+        <div class="rowbtns"><button class="ghost" id="crewSave">Set the code</button></div>
+        <p class="hint" id="crewMsg"></p>
+      </section>
+
+      <section>
+        <h2>The board</h2>
+        <p class="hint" id="boardWho"></p>
+        <div id="boardList"></div>
+        <div class="empty" id="boardEmpty">No scores yet. Go and have a go.</div>
+        <div class="rowbtns"><button class="ghost" id="boardClear">Clear the board</button></div>
+        <div class="warn">Scores live on this phone for now. The shared Google Sheet board behind the crew code is the next piece — this is the front end for it.</div>
+      </section>
+    </div>
+  </div>
+
   <footer>Your settings are saved on this device only. Nothing is uploaded anywhere.</footer>
 </div>
 
@@ -786,16 +889,20 @@
   $('sAnchor').addEventListener('input',()=>{$('anchor').value=$('sAnchor').value;renderAnchorCheck()});
   $('sCasual').addEventListener('click',()=>{$('sCasual').setAttribute('aria-pressed','true');$('sPerm').setAttribute('aria-pressed','false')});
   $('sPerm').addEventListener('click',()=>{$('sPerm').setAttribute('aria-pressed','true');$('sCasual').setAttribute('aria-pressed','false')});
+  $('sCribOn').addEventListener('click',()=>{$('sCribOn').setAttribute('aria-pressed','true');$('sCribOff').setAttribute('aria-pressed','false')});
+  $('sCribOff').addEventListener('click',()=>{$('sCribOff').setAttribute('aria-pressed','true');$('sCribOn').setAttribute('aria-pressed','false')});
   $('sDone').addEventListener('click',()=>{
     $('anchor').value=$('sAnchor').value;$('startDate').value=$('sStart').value;
     $('rate').value=$('sRate').value;$('hours').value=$('sHours').value;$('km').value=$('sKm').value;
     setEmployment($('sCasual').getAttribute('aria-pressed')==='true');
+    setCrib($('sCribOn').getAttribute('aria-pressed')==='true');
     swipes=null;renderAll();$('setup').classList.add('hide');
   });
   $('editBtn').addEventListener('click',()=>{
     $('sAnchor').value=$('anchor').value;$('sStart').value=$('startDate').value;
     $('sRate').value=$('rate').value;$('sHours').value=$('hours').value;$('sKm').value=$('km').value;
     $('sCasual').setAttribute('aria-pressed',casual);$('sPerm').setAttribute('aria-pressed',!casual);
+    $('sCribOn').setAttribute('aria-pressed',cribOn);$('sCribOff').setAttribute('aria-pressed',!cribOn);
     renderSetupPresets();renderThemes();$('setup').classList.remove('hide');showStep(1);
   });
 
@@ -1156,7 +1263,107 @@
     });
   }
 
-  function renderAll(){drawRing();renderCore();renderPresets();renderChips();renderUpcoming();renderPay();renderSwipes();renderFatigue();renderAnchorCheck();renderPhoto();renderAwake();renderSite();renderPackage()}
+  /* ================= CRIB ================= */
+  let cribOn=false, gameSrc='', crewCode='', scores=[];
+
+  function setCrib(on){
+    cribOn=!!on;
+    $('cribOnBtn').setAttribute('aria-pressed',cribOn);
+    $('cribOffBtn').setAttribute('aria-pressed',!cribOn);
+    $('cribTabBtn').style.display=cribOn?'':'none';
+    $('mainNav').style.gridTemplateColumns='repeat('+(cribOn?6:5)+',1fr)';
+    if(!cribOn && $('tab-crib').classList.contains('on')){
+      document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected','false'));
+      document.querySelector('nav button[data-tab=roster]').setAttribute('aria-selected','true');
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+      $('tab-roster').classList.add('on');
+    }
+  }
+  $('cribOnBtn').addEventListener('click',()=>{setCrib(true);save&&save()});
+  $('cribOffBtn').addEventListener('click',()=>{setCrib(false);save&&save()});
+
+  document.querySelectorAll('.subtabs button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.subtabs button').forEach(x=>x.setAttribute('aria-selected','false'));
+    b.setAttribute('aria-selected','true');
+    document.querySelectorAll('.sub').forEach(s=>s.classList.remove('on'));
+    $('sub-'+b.dataset.sub).classList.add('on');
+    window.scrollTo(0,0);
+  }));
+
+  function loadGame(){
+    const wrap=$('gameWrap');
+    if(!gameSrc){
+      wrap.innerHTML='<div class="gameNo" id="gameNo">Load the Trucks lives in its own repo.<br>'+
+        'Paste its address below and it loads right here.</div>';
+      return;
+    }
+    wrap.innerHTML='<iframe id="gameFrame" src="'+gameSrc+'" title="Load the Trucks" '+
+      'allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>';
+  }
+  $('gameSave').addEventListener('click',()=>{
+    let u=$('gameUrl').value.trim();
+    if(u && !/^https?:\/\//i.test(u)) u='https://'+u;
+    gameSrc=u; $('gameUrl').value=u; loadGame();
+    $('gameMsg').textContent=u?'Loaded. If it comes up blank, the game needs to be on https and allow embedding.':'Cleared.';
+    save&&save();
+  });
+  $('gameReload').addEventListener('click',loadGame);
+  $('gameOpen').addEventListener('click',()=>{
+    if(gameSrc) window.open(gameSrc,'_blank','noopener');
+  });
+  $('logScore').addEventListener('click',()=>{
+    const v=prompt('What did you score?');
+    if(v===null) return;
+    const n=+String(v).replace(/[^0-9.]/g,'');
+    if(n>0) addScore(n,'You');
+  });
+
+  // the game posts its score out: parent.postMessage({type:'LTT_SCORE',score:1234},'*')
+  window.addEventListener('message',e=>{
+    const d=e.data;
+    if(!d||typeof d!=='object') return;
+    if(d.type==='LTT_SCORE' && +d.score>0) addScore(+d.score, d.name||'You');
+  });
+
+  function addScore(n,who){
+    scores.push({n:Math.round(n), who:who||'You', t:Date.now()});
+    scores.sort((a,b)=>b.n-a.n);
+    scores=scores.slice(0,25);
+    renderCrib(); save&&save();
+  }
+  function renderCrib(){
+    const best=scores.length?scores[0].n:0;
+    $('bestScore').textContent=best?best.toLocaleString('en-AU'):'—';
+    $('bestNote').textContent=scores.length
+      ? scores.length+' score'+(scores.length>1?'s':'')+' logged'
+      : 'Have a go and it lands here.';
+    $('boardWho').textContent=crewCode
+      ? 'Board for '+crewCode+'. Anyone on the same code sees the same scores.'
+      : 'No crew code set — these are your scores only.';
+    const box=$('boardList');box.innerHTML='';
+    $('boardEmpty').style.display=scores.length?'none':'block';
+    scores.forEach((s,i)=>{
+      const row=document.createElement('div');
+      row.className='lbRow'+(i===0?' me':'');
+      row.innerHTML='<span class="lbPos">'+(i+1)+'</span>'+
+        '<span class="lbName">'+s.who+'<div class="fmeta">'+
+        new Date(s.t).toLocaleDateString('en-AU',{day:'numeric',month:'short'})+'</div></span>'+
+        '<span class="lbScore">'+s.n.toLocaleString('en-AU')+'</span>';
+      box.appendChild(row);
+    });
+  }
+  $('crewSave').addEventListener('click',()=>{
+    crewCode=$('crewCode').value.trim().toUpperCase();
+    $('crewCode').value=crewCode;
+    $('crewMsg').textContent=crewCode?'Code set. Give it to the crew.':'Code cleared.';
+    renderCrib(); save&&save();
+  });
+  $('boardClear').addEventListener('click',()=>{
+    if(!confirm('Clear every score on this phone?')) return;
+    scores=[]; renderCrib(); save&&save();
+  });
+
+  function renderAll(){drawRing();renderCore();renderPresets();renderChips();renderUpcoming();renderPay();renderSwipes();renderFatigue();renderAnchorCheck();renderPhoto();renderAwake();renderSite();renderPackage();renderCrib()}
 
   if($('nudgeBack')) $('nudgeBack').addEventListener('click',()=>shiftAnchor(-1));
   if($('nudgeFwd'))  $('nudgeFwd').addEventListener('click',()=>shiftAnchor(1));
@@ -1353,7 +1560,8 @@
       alWeeks:$('alWeeks').value, km:$('km').value,
       depTime:$('depTime').value, campTime:$('campTime').value,
       machines:myMachines, tickets, photoData,
-      wokeTime:$('wokeTime').value, wokeDay:$('wokeDay').value, annualIn:$('annualIn').value
+      wokeTime:$('wokeTime').value, wokeDay:$('wokeDay').value, annualIn:$('annualIn').value,
+      cribOn, gameSrc, crewCode, scores
     };
   }
   function save(){
@@ -1375,8 +1583,13 @@
       .forEach(k=>{ if(d[k]!==undefined&&$(k)) $(k).value=d[k]; });
     if(d.photoData) photoData=d.photoData;
     if(typeof d.themeIdx==='number') applyTheme(d.themeIdx);
+    if(d.gameSrc){ gameSrc=d.gameSrc; $('gameUrl').value=d.gameSrc; }
+    if(d.crewCode){ crewCode=d.crewCode; $('crewCode').value=d.crewCode; }
+    if(Array.isArray(d.scores)) scores=d.scores;
     setEmployment(d.casual!==false);
     setSkillMode(d.multi!==false);
+    setCrib(d.cribOn===true);
+    loadGame();
     return true;
   }
   $('resetAll').addEventListener('click',()=>{
@@ -1395,7 +1608,7 @@
     renderAll();
     $('saveState').textContent='Saved on this device.';
   }else{
-    setEmployment(true); renderAll(); setSkillMode(true);
+    setEmployment(true); renderAll(); setSkillMode(true); setCrib(false); loadGame();
     $('saveState').textContent='Nothing saved yet — finish setup and it sticks.';
   }
   ready=true;
