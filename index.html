@@ -321,8 +321,17 @@
   .sub{display:none}.sub.on{display:block}
   .gameWrap{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;
     background:var(--surface);min-height:420px}
-  .gameWrap iframe{display:block;width:100%;height:480px;border:0;background:var(--surface)}
-  .gameNo{padding:30px 18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}
+  .gameWrap{min-height:0}
+  .gameWrap canvas{display:block;width:100%;height:auto;touch-action:manipulation}
+  .gameOverlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:0 26px;gap:12px;
+    background:color-mix(in srgb,var(--bg) 82%,transparent)}
+  .gameOverlay.hide{display:none}
+  .goTitle{font-variation-settings:'wdth' 110,'wght' 800;font-size:26px;line-height:1.1}
+  .goBody{font-size:13.5px;color:var(--muted);line-height:1.5}
+  .hud{display:flex;justify-content:space-between;align-items:center;margin-top:12px;
+    font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600}
+  #hudLives{color:var(--bad);letter-spacing:3px}
   .scoreHero{background:linear-gradient(150deg,color-mix(in srgb,var(--travel) 12%,transparent),var(--surface));
     border:1px solid var(--line);border-left:3px solid var(--travel);border-radius:4px;
     padding:16px 15px;margin-top:16px}
@@ -723,30 +732,22 @@
     <div class="sub on" id="sub-play">
       <section style="margin-bottom:18px">
         <div class="gameWrap" id="gameWrap">
-          <div class="gameNo" id="gameNo">
-            Load the Trucks lives in its own repo.<br>Paste its address below and it loads right here.
+          <canvas id="gameCanvas" width="360" height="480"></canvas>
+          <div class="gameOverlay" id="gameOverlay">
+            <div class="goTitle" id="goTitle">Load the Trucks</div>
+            <div class="goBody" id="goBody">Tap to drop the bucket. Fill the tray, don&rsquo;t dump it on the deck.</div>
+            <button class="solid" id="goBtn" style="max-width:200px">Start</button>
           </div>
         </div>
-        <div class="rowbtns">
-          <button class="ghost" id="gameReload">Restart</button>
-          <button class="ghost" id="gameOpen">Open full screen</button>
+        <div class="hud">
+          <span id="hudScore">0</span>
+          <span id="hudLives">&#9679;&#9679;&#9679;</span>
         </div>
         <div class="scoreHero">
           <div class="lab">Your best</div>
-          <div class="n2" id="bestScore">—</div>
+          <div class="n2" id="bestScore">&mdash;</div>
           <div class="note" id="bestNote" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
-          <div class="rowbtns">
-            <button class="ghost" id="logScore">Log a score by hand</button>
-          </div>
         </div>
-      </section>
-
-      <section>
-        <h2>Where the game lives</h2>
-        <p class="hint">Its own address, its own repo. Change it here if you move it — no need to touch the code.</p>
-        <input type="text" id="gameUrl" class="urlIn" placeholder="https://gjd1281.github.io/load-the-trucks/">
-        <div class="rowbtns"><button class="ghost" id="gameSave">Load it</button></div>
-        <p class="hint" id="gameMsg"></p>
       </section>
     </div>
 
@@ -1247,50 +1248,132 @@
   }
 
   /* ================= CRIB ================= */
-  let gameSrc='', crewCode='', scores=[];
+  let crewCode='', scores=[];
 
   document.querySelectorAll('.subtabs button').forEach(b=>b.addEventListener('click',()=>{
     document.querySelectorAll('.subtabs button').forEach(x=>x.setAttribute('aria-selected','false'));
     b.setAttribute('aria-selected','true');
     document.querySelectorAll('.sub').forEach(s=>s.classList.remove('on'));
     $('sub-'+b.dataset.sub).classList.add('on');
+    if(b.dataset.sub!=='play') stopGame();
     window.scrollTo(0,0);
   }));
 
-  function loadGame(){
-    const wrap=$('gameWrap');
-    if(!gameSrc){
-      wrap.innerHTML='<div class="gameNo" id="gameNo">Load the Trucks lives in its own repo.<br>'+
-        'Paste its address below and it loads right here.</div>';
-      return;
-    }
-    wrap.innerHTML='<iframe id="gameFrame" src="'+gameSrc+'" title="Load the Trucks" '+
-      'allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>';
-  }
-  $('gameSave').addEventListener('click',()=>{
-    let u=$('gameUrl').value.trim();
-    if(u && !/^https?:\/\//i.test(u)) u='https://'+u;
-    gameSrc=u; $('gameUrl').value=u; loadGame();
-    $('gameMsg').textContent=u?'Loaded. If it comes up blank, the game needs to be on https and allow embedding.':'Cleared.';
-    save&&save();
-  });
-  $('gameReload').addEventListener('click',loadGame);
-  $('gameOpen').addEventListener('click',()=>{
-    if(gameSrc) window.open(gameSrc,'_blank','noopener');
-  });
-  $('logScore').addEventListener('click',()=>{
-    const v=prompt('What did you score?');
-    if(v===null) return;
-    const n=+String(v).replace(/[^0-9.]/g,'');
-    if(n>0) addScore(n,'You');
-  });
+  /* ---- Load the Trucks ---- */
+  const cv=$('gameCanvas'), cx=cv.getContext('2d');
+  const W=360,H=480, GROUND=430;
+  let G=null, raf=null, C={};
 
-  // the game posts its score out: parent.postMessage({type:'LTT_SCORE',score:1234},'*')
-  window.addEventListener('message',e=>{
-    const d=e.data;
-    if(!d||typeof d!=='object') return;
-    if(d.type==='LTT_SCORE' && +d.score>0) addScore(+d.score, d.name||'You');
-  });
+  function colours(){
+    const cs=getComputedStyle(document.documentElement), g=k=>cs.getPropertyValue('--'+k).trim();
+    C={bg:g('bg'),surf:g('surface-2'),line:g('line'),text:g('text'),muted:g('muted'),
+       day:g('day'),day2:g('day2'),night:g('night'),home:g('home'),bad:g('bad'),ink:g('ink')};
+  }
+  function newGame(){
+    colours();
+    G={score:0,lives:3,t:0,swing:0,load:null,trucks:[],spawn:0,over:false};
+    addTruck();
+  }
+  function addTruck(){
+    const spd=1.1+Math.min(1.9,(G.score/220));
+    G.trucks.push({x:-90,w:86,spd:spd,fill:0,gone:false});
+  }
+  function bucketX(){ return W/2 + Math.sin(G.swing)*126; }
+
+  function drop(){
+    if(!G||G.over||G.load) return;
+    G.load={x:bucketX(),y:96,vy:0};
+  }
+  cv.addEventListener('pointerdown',e=>{e.preventDefault();drop()});
+
+  function tick(){
+    G.t++;
+    G.swing += 0.028 + Math.min(0.022,G.score/9000);
+
+    if(G.load){
+      G.load.vy += 0.42;
+      G.load.y += G.load.vy;
+      if(G.load.y>=GROUND-16){
+        let hit=null;
+        for(const tr of G.trucks){
+          const tx=tr.x+18, tw=tr.w-30;
+          if(G.load.x>tx && G.load.x<tx+tw && tr.fill<4){ hit=tr; break; }
+        }
+        if(hit){
+          hit.fill++;
+          G.score += 10 + hit.fill*5;
+          if(hit.fill>=4){ hit.spd*=2.1; hit.gone=true; }
+        }else{
+          G.lives--;
+          if(G.lives<=0) endGame();
+        }
+        G.load=null;
+      }
+    }
+
+    G.trucks.forEach(tr=>tr.x+=tr.spd);
+    G.trucks=G.trucks.filter(tr=>tr.x<W+120);
+    G.spawn--;
+    if(G.spawn<=0 && G.trucks.length<3){
+      addTruck();
+      G.spawn = 150 - Math.min(70,G.score/12);
+    }
+
+    $('hudScore').textContent=G.score.toLocaleString('en-AU');
+    $('hudLives').textContent='\u25CF'.repeat(Math.max(0,G.lives));
+  }
+
+  function truck(tr){
+    const x=tr.x, y=GROUND;
+    cx.fillStyle=C.line;
+    cx.fillRect(x+16,y-30,tr.w-30,26);                 // tray
+    cx.fillStyle=tr.gone?C.home:C.day;
+    cx.fillRect(x+tr.w-26,y-40,26,36);                 // cab
+    for(let i=0;i<tr.fill;i++){                        // load in the tray
+      cx.fillStyle=C.muted;
+      cx.fillRect(x+20+i*((tr.w-38)/4), y-30-6, (tr.w-38)/4-3, 10);
+    }
+    cx.fillStyle=C.text;
+    [x+26,x+tr.w-38,x+tr.w-14].forEach(wx=>{
+      cx.beginPath();cx.arc(wx,y,8,0,7);cx.fill();
+    });
+  }
+  function draw(){
+    cx.clearRect(0,0,W,H);
+    cx.fillStyle=C.bg; cx.fillRect(0,0,W,H);
+
+    cx.strokeStyle=C.line; cx.lineWidth=2;
+    cx.beginPath(); cx.moveTo(0,GROUND+9); cx.lineTo(W,GROUND+9); cx.stroke();
+
+    const bx=bucketX();
+    cx.strokeStyle=C.muted; cx.lineWidth=2;
+    cx.beginPath(); cx.moveTo(W/2,18); cx.lineTo(bx,84); cx.stroke();
+    cx.fillStyle=C.day2;
+    cx.beginPath();
+    cx.moveTo(bx-17,84); cx.lineTo(bx+17,84); cx.lineTo(bx+11,106); cx.lineTo(bx-11,106);
+    cx.closePath(); cx.fill();
+
+    if(G.load){ cx.fillStyle=C.muted; cx.fillRect(G.load.x-8,G.load.y-8,16,14); }
+    G.trucks.forEach(truck);
+  }
+  function loop(){ if(!G||G.over) return; tick(); draw(); raf=requestAnimationFrame(loop); }
+
+  function startGame(){
+    newGame();
+    $('gameOverlay').classList.add('hide');
+    cancelAnimationFrame(raf); loop();
+  }
+  function stopGame(){ cancelAnimationFrame(raf); if(G) G.over=true; }
+  function endGame(){
+    G.over=true; cancelAnimationFrame(raf); draw();
+    $('goTitle').textContent=G.score.toLocaleString('en-AU');
+    $('goBody').textContent = G.score>=(scores[0]?scores[0].n:0)
+      ? 'New best. Get in ya beauty.' : 'Three on the deck. Have another go.';
+    $('goBtn').textContent='Go again';
+    $('gameOverlay').classList.remove('hide');
+    if(G.score>0) addScore(G.score,'You');
+  }
+  $('goBtn').addEventListener('click',startGame);
 
   function addScore(n,who){
     scores.push({n:Math.round(n), who:who||'You', t:Date.now()});
@@ -1300,13 +1383,13 @@
   }
   function renderCrib(){
     const best=scores.length?scores[0].n:0;
-    $('bestScore').textContent=best?best.toLocaleString('en-AU'):'—';
+    $('bestScore').textContent=best?best.toLocaleString('en-AU'):'\u2014';
     $('bestNote').textContent=scores.length
-      ? scores.length+' score'+(scores.length>1?'s':'')+' logged'
+      ? scores.length+' game'+(scores.length>1?'s':'')+' played'
       : 'Have a go and it lands here.';
     $('boardWho').textContent=crewCode
       ? 'Board for '+crewCode+'. Anyone on the same code sees the same scores.'
-      : 'No crew code set — these are your scores only.';
+      : 'No crew code set \u2014 these are your scores only.';
     const box=$('boardList');box.innerHTML='';
     $('boardEmpty').style.display=scores.length?'none':'block';
     scores.forEach((s,i)=>{
@@ -1528,7 +1611,7 @@
       depTime:$('depTime').value, campTime:$('campTime').value,
       machines:myMachines, tickets, photoData,
       wokeTime:$('wokeTime').value, wokeDay:$('wokeDay').value, annualIn:$('annualIn').value,
-      gameSrc, crewCode, scores
+      crewCode, scores
     };
   }
   function save(){
@@ -1550,12 +1633,10 @@
       .forEach(k=>{ if(d[k]!==undefined&&$(k)) $(k).value=d[k]; });
     if(d.photoData) photoData=d.photoData;
     if(typeof d.themeIdx==='number') applyTheme(d.themeIdx);
-    if(d.gameSrc){ gameSrc=d.gameSrc; $('gameUrl').value=d.gameSrc; }
     if(d.crewCode){ crewCode=d.crewCode; $('crewCode').value=d.crewCode; }
     if(Array.isArray(d.scores)) scores=d.scores;
     setEmployment(d.casual!==false);
     setSkillMode(d.multi!==false);
-    loadGame();
     return true;
   }
   $('resetAll').addEventListener('click',()=>{
@@ -1574,7 +1655,7 @@
     renderAll();
     $('saveState').textContent='Saved on this device.';
   }else{
-    setEmployment(true); renderAll(); setSkillMode(true); loadGame();
+    setEmployment(true); renderAll(); setSkillMode(true);
     $('saveState').textContent='Nothing saved yet — finish setup and it sticks.';
   }
   ready=true;
