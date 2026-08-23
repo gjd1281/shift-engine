@@ -1,764 +1,1413 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Ultimate Shift Engine</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0C0A14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shift Engine">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
 <style>
-/* ============ THEMES ============ */
-:root{
-  --bg:#14101f; --panel:#1d1730; --line:#332a4a; --text:#EDE9F7; --dim:#9C93B8;
-  --accent:#FFB020; --work:#FFB020; --home:#4ED8A0; --travel:#7BA7FF;
-  --mono:ui-monospace,Menlo,Consolas,monospace;
-  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-}
-[data-theme="hivis"]{--bg:#0B0B0C;--panel:#161618;--line:#2A2A2E;--text:#F2F2F2;--dim:#8E8E95;--accent:#D6FF3D;--work:#D6FF3D;--home:#38C7C7;--travel:#FF8A3D}
-[data-theme="coal"]{--bg:#17181A;--panel:#212328;--line:#33363D;--text:#ECEDEF;--dim:#8C919B;--accent:#FF7A2F;--work:#FF7A2F;--home:#5FD0A6;--travel:#82A8FF}
-[data-theme="steel"]{--bg:#0C1622;--panel:#152232;--line:#243447;--text:#E6EFF9;--dim:#8199B3;--accent:#3FD0E8;--work:#3FD0E8;--home:#5AE0A8;--travel:#FFC24D}
-[data-theme="dust"]{--bg:#1B1613;--panel:#26201B;--line:#3B3128;--text:#F2EAE0;--dim:#A89684;--accent:#E8A44C;--work:#E8A44C;--home:#8FBF7A;--travel:#C98FD6}
-[data-theme="daylight"]{--bg:#F4F2EE;--panel:#FFFFFF;--line:#DFD9CF;--text:#1E1A16;--dim:#6E665C;--accent:#C25B2B;--work:#C25B2B;--home:#2E8A63;--travel:#3B6BB5}
-[data-theme="ink"]{--bg:#0F1113;--panel:#191C20;--line:#2A2F35;--text:#E8ECF1;--dim:#89929D;--accent:#F2F2F2;--work:#F2F2F2;--home:#6FCF97;--travel:#6FA8DC}
+  :root{
+    --bg:#0C0A14; --bg2:#15111F; --glow:#241B3A;
+    --surface:#1A1526; --surface-2:#241C33; --line:#332A47;
+    --text:#F3EEF9; --muted:#9B90B0; --ink:#1A1005;
+    --day:#FFB62E; --day2:#FF7A45;
+    --night:#4CC9F0; --night2:#4361EE;
+    --off:#2F5A4B; --home:#3DD9A0; --travel:#F7529A;
+    --bad:#FF5F6D; --good:#3DD9A0;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(900px 520px at 50% -60px, var(--glow) 0%, transparent 62%),
+      linear-gradient(180deg,var(--bg2) 0%, var(--bg) 42%);
+    background-attachment:fixed;
+    color:var(--text);font-family:'Archivo',system-ui,sans-serif;
+    font-size:15px;line-height:1.45;padding:0 0 40px;min-height:100vh}
+  .wrap{max-width:440px;margin:0 auto;padding:0 18px}
+  .mono{font-family:'IBM Plex Mono',monospace}
 
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans)}
-body{padding-bottom:78px}
-h1,h2,h3{margin:0 0 8px}
-button{font-family:var(--mono);cursor:pointer}
-input,select,textarea{font-family:var(--sans);font-size:16px}
+  header{padding:24px 0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{line-height:.92}
+  .brandTop{font-variation-settings:'wdth' 112,'wght' 500;font-size:15px;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--muted)}
+  .brandBot{font-variation-settings:'wdth' 118,'wght' 800;font-size:30px;letter-spacing:.03em;
+    margin-top:5px;background:linear-gradient(96deg,var(--day) 0%,var(--travel) 55%,var(--night) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  #editBtn{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:4px;
+    padding:8px 11px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;cursor:pointer;flex:none}
+  #editBtn:hover{color:var(--text);border-color:var(--muted)}
 
-.wrap{max-width:560px;margin:0 auto;padding:14px}
-.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
-.row{display:flex;gap:10px;align-items:center}
-.row.between{justify-content:space-between}
-label.f{display:block;margin:10px 0 0}
-label.f span{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--dim);margin-bottom:5px}
-input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{
-  width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;
-  padding:11px;color:var(--text)}
-textarea{min-height:70px;resize:vertical}
-.btn{background:var(--accent);color:#12101a;border:0;border-radius:999px;padding:12px 20px;
-  font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
-.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
-.btn.wide{width:100%}
-.pillrow{display:flex;flex-wrap:wrap;gap:8px}
-.pill{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:9px 14px;
-  color:var(--dim);font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
-.pill.on{border-color:var(--accent);color:var(--accent)}
-.big{font-family:var(--mono);font-size:30px;letter-spacing:-.02em;color:var(--accent)}
-.dim{color:var(--dim)}
-.mono{font-family:var(--mono)}
-.small{font-size:12px}
-.hr{height:1px;background:var(--line);margin:12px 0}
-.warn{font-size:11px;color:var(--dim);line-height:1.5;margin-top:8px}
+  nav{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--line);
+    border-radius:4px;overflow:hidden;margin-bottom:20px;background:var(--surface)}
+  nav button{background:transparent;border:none;border-right:1px solid var(--line);
+    color:var(--muted);padding:11px 2px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+    letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+  nav button:last-child{border-right:none}
+  nav button[aria-selected=true]{background:var(--surface-2);color:var(--text);box-shadow:inset 0 -2px 0 var(--day)}
+  .panel{display:none}.panel.on{display:block}
 
-/* ============ WHEEL ============ */
-.hubwrap{position:relative;margin:4px auto 0;max-width:360px}
-.hubwrap > svg{position:relative;z-index:2;width:100%;height:auto;display:block}
-.hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;
-  overflow:hidden;z-index:1;background:var(--panel);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 45%,transparent)}
-.hub.empty{box-shadow:0 0 0 1px var(--line)}
-.hub img{width:100%;height:100%;object-fit:cover;display:block}
-.hub .scrim{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,
-  color-mix(in srgb,var(--bg) 72%,transparent) 0%,color-mix(in srgb,var(--bg) 45%,transparent) 55%,
-  color-mix(in srgb,var(--bg) 72%,transparent) 100%)}
-.hub .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
-.hubcap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;
-  text-align:center;pointer-events:none;font-family:var(--mono)}
-.hubcap .t{font-size:9px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
-.hubcap .n{font-size:22px;color:var(--text);margin-top:2px}
+  section{margin:0 0 28px}
+  h2{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);font-weight:500;margin:0 0 4px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+  .hint{font-size:12.5px;color:var(--muted);margin:11px 0 13px}
+  .warn{font-size:12px;color:var(--muted);border-left:2px solid var(--travel);
+    padding:8px 0 8px 11px;margin:14px 0 0;line-height:1.5}
 
-/* ============ TABS ============ */
-nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:50;display:flex;
-  background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-nav.tabs button{flex:1;background:none;border:0;padding:12px 4px 14px;color:var(--dim);
-  font-size:10px;letter-spacing:.12em;text-transform:uppercase}
-nav.tabs button.on{color:var(--accent)}
-nav.tabs button .ic{display:block;font-size:16px;margin-bottom:3px}
-.tab{display:none}
-.tab.on{display:block}
+  .ringbox{position:relative;margin:2px 0}
+  svg.ring{display:block;width:100%;height:auto;overflow:visible}
+  .ring path{cursor:pointer;transition:opacity .18s}
+  .ring path.dim{opacity:.42}
+  .ring text{font-family:'IBM Plex Mono',monospace;font-size:8.5px;fill:var(--muted)}
+  .ring text.now{fill:var(--text);font-weight:600}
+  .core{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;pointer-events:none;padding:0 58px}
+  .core .kicker{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--muted)}
+  .core .big{font-variation-settings:'wdth' 112,'wght' 800;font-size:42px;line-height:1;margin:6px 0 2px}
+  .core .sub{font-size:13px;color:var(--muted);line-height:1.3}
 
-/* ============ WIZARD ============ */
-.wiz{position:fixed;inset:0;z-index:100;background:var(--bg);overflow:auto;display:none}
-.wiz.on{display:block}
-.steps{display:flex;gap:6px;margin-bottom:16px}
-.steps i{flex:1;height:3px;background:var(--line);border-radius:2px}
-.steps i.on{background:var(--accent)}
+  .strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 24px}
+  .cell{background:linear-gradient(160deg,var(--surface-2) 0%,var(--surface) 70%);
+    border:1px solid var(--line);border-radius:4px;padding:12px 13px}
+  .cell .lab{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted)}
+  .cell .val{font-variation-settings:'wdth' 105,'wght' 700;font-size:19px;margin-top:5px;line-height:1.15}
+  .cell .note{font-size:12px;color:var(--muted);margin-top:3px}
 
-/* ============ LISTS ============ */
-.item{display:flex;justify-content:space-between;align-items:center;gap:10px;
-  padding:11px 0;border-bottom:1px solid var(--line)}
-.item:last-child{border-bottom:0}
-.item .x{background:none;border:0;color:var(--dim);font-size:18px;padding:0 4px}
-.tick{display:flex;align-items:center;gap:8px;margin-top:8px}
-.tick img{width:42px;height:42px;object-fit:cover;border-radius:7px;border:1px solid var(--line)}
+  .presets{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 16px}
+  .preset{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
+    border-radius:20px;padding:7px 13px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer}
+  .preset:hover{color:var(--text);border-color:var(--muted)}
+  .preset[aria-pressed=true]{background:linear-gradient(96deg,var(--day),var(--day2));
+    border-color:transparent;color:var(--ink);font-weight:600}
 
-/* ============ BUILD STAMP ============ */
-.build{position:fixed;bottom:84px;right:8px;z-index:60;pointer-events:none;
-  background:var(--panel);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
-  border-radius:999px;padding:3px 9px;font-family:var(--mono);font-size:9px;
-  letter-spacing:.14em;color:var(--accent);text-transform:uppercase;opacity:.85}
+  /* theme swatches */
+  .themes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+  .theme{border:1px solid var(--line);border-radius:5px;padding:10px 9px 9px;background:var(--surface);
+    cursor:pointer;text-align:left}
+  .theme[aria-pressed=true]{border-color:var(--day);box-shadow:0 0 0 1px var(--day)}
+  .theme .sw{display:flex;gap:3px;margin-bottom:7px}
+  .theme .sw i{height:16px;flex:1;border-radius:2px}
+  .theme .tn{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted)}
+  .theme[aria-pressed=true] .tn{color:var(--text)}
+
+  .chips{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .chip{aspect-ratio:1;border:1px solid var(--line);border-radius:4px;background:var(--surface);
+    color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;padding:0}
+  .chip span{position:absolute;top:2px;left:4px;font-size:8px;color:var(--muted);font-weight:400}
+  .chip.D{background:color-mix(in srgb,var(--day) 18%,transparent);border-color:var(--day);color:var(--day)}
+  .chip.N{background:color-mix(in srgb,var(--night) 16%,transparent);border-color:var(--night);color:var(--night)}
+  .chip.O{background:color-mix(in srgb,var(--home) 12%,transparent);border-color:var(--off);color:var(--home)}
+  .chip.T{background:color-mix(in srgb,var(--travel) 16%,transparent);border-color:var(--travel);color:var(--travel)}
+  .chip.today{outline:2px solid var(--text);outline-offset:1px}
+
+  .rowbtns{display:flex;gap:8px;margin-top:12px}
+  button.ghost{flex:1;background:transparent;border:1px solid var(--line);color:var(--muted);
+    border-radius:4px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+  button.ghost:hover{border-color:var(--muted);color:var(--text)}
+  button.solid{background:linear-gradient(96deg,var(--day),var(--day2));border:none;color:var(--ink);
+    border-radius:4px;padding:14px;width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px;
+    letter-spacing:.12em;text-transform:uppercase;font-weight:600;cursor:pointer}
+
+  .field{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:11px 0;border-bottom:1px solid var(--line)}
+  .field label{font-size:14px}
+  .field .unit{font-size:12px;color:var(--muted);margin-right:6px}
+  input[type=number],input[type=date],input[type=time],select{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    font-family:'IBM Plex Mono',monospace;font-size:14px;padding:7px 9px;border-radius:4px}
+  input[type=number],input[type=date]{width:136px;text-align:right}
+  select{width:150px}
+  input:focus,select:focus{outline:2px solid var(--day);outline-offset:1px}
+
+  .seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);
+    border-radius:4px;overflow:hidden;margin:14px 0 4px}
+  .seg button{background:transparent;border:none;color:var(--muted);padding:11px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;cursor:pointer}
+  .seg button[aria-pressed=true]{background:linear-gradient(96deg,var(--day),var(--day2));
+    color:var(--ink);font-weight:600}
+
+  .payhero{background:linear-gradient(150deg,var(--surface-2),var(--surface));
+    border:1px solid var(--line);border-left:3px solid var(--day);
+    border-radius:4px;padding:16px 15px;margin:16px 0 11px}
+  .payhero .lab{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted)}
+  .payhero .amt{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:32px;line-height:1.1;
+    margin-top:6px;background:linear-gradient(96deg,var(--day),var(--day2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .paygrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  .count{background:linear-gradient(150deg,color-mix(in srgb,var(--travel) 12%,transparent),var(--surface));
+    border:1px solid var(--line);border-radius:4px;padding:18px 16px}
+  .count .n{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:44px;line-height:1;
+    background:linear-gradient(96deg,var(--travel),var(--day));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .count .u{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);margin-top:6px}
+  .bar{height:5px;background:var(--off);border-radius:3px;margin:15px 0 9px;overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--travel),var(--day))}
+  .count .when{font-size:13px;color:var(--muted);line-height:1.5}
+
+  ol.up,ul.plain{list-style:none;margin:0;padding:0}
+  ol.up li{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .dot.D{background:var(--day)}.dot.N{background:var(--night)}
+  .dot.O{background:var(--home)}.dot.T{background:var(--travel)}
+  .upday{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);width:60px;flex:none}
+  .upname{font-size:14px;flex:1}
+  .upmeta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;justify-content:center}
+  .legend div{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12px}
+  th{text-align:left;font-weight:500;color:var(--muted);font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;padding:0 0 8px;border-bottom:1px solid var(--line)}
+  td{padding:7px 0;border-bottom:1px solid var(--line)}
+  td input[type=time]{width:80px;padding:5px 6px;font-size:12px}
+  .hrs{text-align:right;color:var(--muted)}
+
+  .verdict{border:1px solid var(--line);border-radius:4px;padding:14px 15px;margin-top:16px;background:var(--surface)}
+  .verdict.ok{border-left:3px solid var(--good)}
+  .verdict.bad{border-left:3px solid var(--bad)}
+  .verdict .head{font-variation-settings:'wght' 700;font-size:17px}
+  .verdict .body{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.5}
+
+  .drop{display:block;border:1px dashed var(--line);border-radius:4px;padding:24px 16px;text-align:center;
+    color:var(--muted);font-size:13px;cursor:pointer;background:var(--surface)}
+  .drop:hover{border-color:var(--day);color:var(--text)}
+  ul.plain li{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .fname{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fmeta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+  a.open{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--day);text-decoration:none;border:1px solid var(--line);
+    padding:5px 9px;border-radius:4px}
+  .empty{color:var(--muted);font-size:13px;padding:18px 0}
+
+  #setup{position:fixed;inset:0;z-index:50;overflow-y:auto;
+    background:radial-gradient(900px 520px at 50% -60px,var(--glow) 0%,transparent 62%),
+      linear-gradient(180deg,var(--bg2) 0%,var(--bg) 46%)}
+  #setup.hide{display:none}
+  .sWrap{max-width:440px;margin:0 auto;padding:34px 18px 40px;min-height:100vh;display:flex;flex-direction:column}
+  .steps{display:flex;gap:5px;margin-bottom:30px}
+  .steps i{height:3px;flex:1;background:var(--off);border-radius:2px}
+  .steps i.on{background:linear-gradient(90deg,var(--day),var(--day2))}
+  .sStep{display:none;flex:1;flex-direction:column}
+  .sStep.on{display:flex}
+  .sKick{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--muted)}
+  .sHead{font-variation-settings:'wdth' 108,'wght' 800;font-size:29px;line-height:1.12;margin:9px 0 10px}
+  .sBody{font-size:14px;color:var(--muted);line-height:1.55;margin-bottom:22px}
+  .sFoot{margin-top:auto;padding-top:26px;display:flex;gap:9px;align-items:center}
+  .sBack{background:transparent;border:none;color:var(--muted);font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:14px 4px}
+  .bigDate{width:100%!important;text-align:left!important;font-size:17px!important;padding:14px 13px!important}
+
+
+  /* ---- skills ---- */
+  .machines{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 6px}
+  .mach{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
+    border-radius:20px;padding:7px 13px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer}
+  .mach[aria-pressed=true]{background:color-mix(in srgb,var(--day) 20%,transparent);
+    border-color:var(--day);color:var(--day);font-weight:600}
+  .hourRow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .hourRow .mn{flex:1;font-size:14px}
+  .hourRow input{width:96px}
+  .hourRow .hu{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);width:34px}
+  .tick{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .tick .tn2{flex:1;font-size:14px}
+  .tick .td{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;
+    text-transform:uppercase;margin-top:2px}
+  .td.ok{color:var(--good)}.td.warn{color:var(--day)}.td.exp{color:var(--bad)}
+  .tick input[type=date]{width:140px}
+  .profile{background:linear-gradient(150deg,var(--surface-2),var(--surface));border:1px solid var(--line);
+    border-left:3px solid var(--night);border-radius:4px;padding:16px 15px;margin-top:4px}
+  .profile .pl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted)}
+  .profile .pv{font-size:14px;line-height:1.6;margin-top:8px}
+  .profile .pv b{font-variation-settings:'wght' 700}
+
+  /* ---- fatigue ---- */
+  .fatigue{border:1px solid var(--bad);border-radius:4px;padding:16px 15px;margin:0 0 24px;
+    background:linear-gradient(150deg,color-mix(in srgb,var(--bad) 16%,transparent),var(--surface))}
+  .fatigue h3{margin:0;font-variation-settings:'wdth' 106,'wght' 800;font-size:19px;line-height:1.2}
+  .fatigue p{font-size:13.5px;color:var(--text);opacity:.86;line-height:1.55;margin:9px 0 0}
+  .fatigue ul{margin:11px 0 0;padding-left:17px;font-size:13.5px;line-height:1.6;opacity:.86}
+  .fatigue .lab{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--bad);margin-bottom:7px}
+  .fatigue.hide{display:none}
+
+  /* ---- anchor nudge ---- */
+  .nudge{display:flex;gap:8px;margin-top:10px}
+  .nudge button{flex:1;background:transparent;border:1px solid var(--line);color:var(--muted);
+    border-radius:4px;padding:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer}
+  .nudge button:hover{color:var(--text);border-color:var(--muted)}
+  .checkline{font-size:13px;color:var(--muted);margin-top:11px;line-height:1.5}
+  .checkline b{color:var(--text);font-variation-settings:'wght' 700}
+
+  /* ---- share / view mode ---- */
+  .shareBox{background:linear-gradient(150deg,var(--surface-2),var(--surface));
+    border:1px solid var(--line);border-left:3px solid var(--night);border-radius:4px;padding:16px 15px}
+  .viewBanner{background:color-mix(in srgb,var(--night) 18%,transparent);border:1px solid var(--night);
+    border-radius:4px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.5}
+  body.viewmode nav,body.viewmode #shareSec,body.viewmode #patternSec,
+  body.viewmode #themeSec,body.viewmode #editBtn{display:none!important}
+
+  /* ---- centre photo ---- */
+  .core .photoWrap{width:96px;height:96px;border-radius:50%;overflow:hidden;
+    border:2px solid var(--line);margin-bottom:8px;background:var(--surface-2);
+    display:flex;align-items:center;justify-content:center}
+  .core .photoWrap img{width:100%;height:100%;object-fit:cover;display:block}
+  .core.hasPhoto .big{font-size:24px;margin:2px 0 0}
+  .core.hasPhoto .kicker{display:none}
+  #photoRow{display:flex;gap:8px;margin-top:12px}
+  #photoRow label,#photoRow button{flex:1;background:transparent;border:1px solid var(--line);
+    color:var(--muted);border-radius:4px;padding:10px;font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;text-align:center}
+  #photoRow label:hover,#photoRow button:hover{color:var(--text);border-color:var(--muted)}
+
+  /* ---- awake meter ---- */
+  .awake{border:1px solid var(--line);border-radius:4px;padding:16px 15px;
+    background:linear-gradient(150deg,var(--surface-2),var(--surface));margin-top:4px}
+  .awake .big2{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:40px;line-height:1}
+  .awake .u2{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);margin-top:6px}
+  .awake .verdict2{font-size:14px;line-height:1.55;margin-top:13px}
+  .awake .verdict2 b{font-variation-settings:'wght' 700}
+  .meter{height:8px;background:var(--off);border-radius:4px;margin:15px 0 6px;overflow:hidden}
+  .meter i{display:block;height:100%;border-radius:4px}
+  .scale{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;color:var(--muted);letter-spacing:.06em}
+
+  /* ---- attachments ---- */
+  .tick{flex-wrap:wrap}
+  .tickActions{display:flex;gap:6px;width:100%;margin-top:8px}
+  .tickActions button,.tickActions label{flex:1;background:transparent;border:1px solid var(--line);
+    color:var(--muted);border-radius:4px;padding:7px 6px;font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;text-align:center}
+  .tickActions button:hover,.tickActions label:hover{color:var(--text);border-color:var(--muted)}
+  .tickActions .has{border-color:var(--good);color:var(--good)}
+  .attached{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--good);
+    width:100%;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .packBox{background:linear-gradient(150deg,var(--surface-2),var(--surface));border:1px solid var(--line);
+    border-left:3px solid var(--night);border-radius:4px;padding:16px 15px}
+  .packList{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);
+    line-height:1.8;margin:0 0 13px}
+  .packList b{color:var(--text)}
+  .quota{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-top:10px}
+  footer{border-top:1px solid var(--line);padding-top:16px;margin-top:8px;font-size:12px;color:var(--muted)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
-</head>
-<body>
 
-<div class="build" id="buildStamp">v1</div>
+<!-- ================= SETUP ================= -->
+<div id="setup">
+  <div class="sWrap">
+    <div class="steps"><i class="on"></i><i></i><i></i><i></i><i></i></div>
 
-<!-- ================= SETUP WIZARD ================= -->
-<div class="wiz" id="wiz">
-  <div class="wrap">
-    <div class="steps" id="wizSteps"><i></i><i></i><i></i><i></i><i></i></div>
-
-    <div class="wizstep" data-s="1">
-      <div class="eyebrow">Step 1 of 5</div>
-      <h2>Who's driving?</h2>
-      <p class="dim small">Used on your operator profile when you share it.</p>
-      <label class="f"><span>Name</span><input type="text" id="wName" placeholder="Gavin Duffy"></label>
-      <label class="f"><span>Site / mine</span><input type="text" id="wSite" placeholder="Callide"></label>
+    <div class="sStep on" data-step="0">
+      <div class="sKick">The Ultimate Shift Engine</div>
+      <h1 class="sHead">Your roster isn't a week. Let's stop pretending it is.</h1>
+      <p class="sBody">Five questions and you're done. Everything after that runs off the answers — what you're on today, what lands next, what it pays, and whether the payslip is right.</p>
+      <div class="sFoot"><button class="solid" data-next>Start</button></div>
     </div>
 
-    <div class="wizstep" data-s="2" hidden>
-      <div class="eyebrow">Step 2 of 5</div>
-      <h2>How are you employed?</h2>
-      <p class="dim small">Sets whether the Pay tab uses casual loading or accrues leave.</p>
-      <div class="pillrow" id="wEmp" style="margin-top:12px">
-        <button class="pill" data-v="casual">Casual</button>
-        <button class="pill" data-v="permanent">Permanent</button>
+    <div class="sStep" data-step="1">
+      <div class="sKick">Step 1 of 5</div>
+      <h1 class="sHead">Which roster are you on?</h1>
+      <p class="sBody">Pick the closest. You can fix individual days against the printed sheet in a second.</p>
+      <div class="presets" id="sPresets"></div>
+      <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
+    </div>
+
+    <div class="sStep" data-step="2">
+      <div class="sKick">Step 2 of 5</div>
+      <h1 class="sHead">When did day one land?</h1>
+      <p class="sBody">The first shift after your longest break. This is the one thing the whole app hangs off — a 28-day cycle or a 7/7 day-and-night rotation only lines up if this date is right.</p>
+      <input type="date" id="sAnchor" class="bigDate">
+      <div class="checkline" id="sAnchorCheck"></div>
+      <div class="nudge">
+        <button id="sNudgeBack">&#9664; A day earlier</button>
+        <button id="sNudgeFwd">A day later &#9654;</button>
       </div>
+      <p class="hint">Not sure? Set it roughly, then nudge until the line above matches what you're actually doing today.</p>
+      <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
     </div>
 
-    <div class="wizstep" data-s="3" hidden>
-      <div class="eyebrow">Step 3 of 5</div>
-      <h2>Pick your roster</h2>
-      <div class="pillrow" id="wRoster" style="margin-top:12px"></div>
-      <div id="wCustom" hidden>
-        <div class="row" style="gap:10px">
-          <label class="f" style="flex:1"><span>Days on</span><input type="number" id="wOn" value="7" min="1"></label>
-          <label class="f" style="flex:1"><span>Days home</span><input type="number" id="wOff" value="7" min="1"></label>
-        </div>
+    <div class="sStep" data-step="3">
+      <div class="sKick">Step 3 of 5</div>
+      <h1 class="sHead">How are you employed?</h1>
+      <p class="sBody">Casual means the loading is inside your rate and nothing accrues. Permanent means leave builds up every swing.</p>
+      <div class="seg" role="group" style="margin-top:0">
+        <button id="sCasual" aria-pressed="true">Casual</button>
+        <button id="sPerm" aria-pressed="false">Permanent</button>
       </div>
-      <label class="f"><span>First day of your next swing</span><input type="date" id="wStart"></label>
-      <div class="row" style="margin-top:12px;gap:8px">
-        <input type="checkbox" id="wTravel" checked style="width:auto">
-        <label for="wTravel" class="small dim" style="margin:0">Mark travel days (T) — they sit inside the break</label>
-      </div>
+      <div class="field" style="margin-top:18px"><label for="sStart">Started this job</label>
+        <input type="date" id="sStart"></div>
+      <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
     </div>
 
-    <div class="wizstep" data-s="4" hidden>
-      <div class="eyebrow">Step 4 of 5</div>
-      <h2>What are you earning?</h2>
-      <p class="dim small">Rough numbers are fine — change them any time in Pay.</p>
-      <label class="f"><span>Base rate ($/hr)</span><input type="number" id="wRate" step="0.01" placeholder="52.00"></label>
-      <label class="f"><span>Hours per shift</span><input type="number" id="wHrs" step="0.5" value="12"></label>
+    <div class="sStep" data-step="4">
+      <div class="sKick">Step 4 of 5</div>
+      <h1 class="sHead">What do they pay you?</h1>
+      <p class="sBody">Off your last payslip. This is what the forecast and the payslip check run on.</p>
+      <div class="field"><label for="sRate">Hourly rate</label>
+        <div><span class="unit">$</span><input type="number" id="sRate" value="" step="0.01" placeholder="0.00"></div></div>
+      <div class="field"><label for="sHours">Paid hours per shift</label>
+        <div><span class="unit">hrs</span><input type="number" id="sHours" value="12.5" step="0.25"></div></div>
+      <div class="field"><label for="sKm">Round trip to site</label>
+        <div><span class="unit">km</span><input type="number" id="sKm" value="" step="10" placeholder="0"></div></div>
+      <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
     </div>
 
-    <div class="wizstep" data-s="5" hidden>
-      <div class="eyebrow">Step 5 of 5</div>
-      <h2>Pick a colour</h2>
-      <div class="pillrow" id="wTheme" style="margin-top:12px"></div>
-      <p class="warn">Everything saves on this device. Nothing is sent anywhere.</p>
-    </div>
-
-    <div class="row between" style="margin-top:22px">
-      <button class="btn ghost" id="wizBack">Back</button>
-      <button class="btn" id="wizNext">Next</button>
+    <div class="sStep" data-step="5">
+      <div class="sKick">Step 5 of 5</div>
+      <h1 class="sHead">Pick your look.</h1>
+      <p class="sBody">Night shift needs a screen that won't blind you at three in the morning. Day shift in the sun needs the opposite. Change it any time.</p>
+      <div class="themes" id="sThemes"></div>
+      <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" id="sDone">Open my roster</button></div>
     </div>
   </div>
 </div>
 
-<!-- ================= ROSTER ================= -->
-<section class="tab on" id="tab-roster">
-  <div class="wrap">
-    <div class="row between">
-      <div>
-        <div class="eyebrow">Shift Engine</div>
-        <h1 id="rHead" style="font-size:20px">Roster</h1>
+<!-- ================= APP ================= -->
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="brandTop">The Ultimate</div>
+      <div class="brandBot">Shift Engine</div>
+    </div>
+    <button id="editBtn">Edit</button>
+  </header>
+
+  <nav role="tablist">
+    <button role="tab" aria-selected="true" data-tab="roster">Roster</button>
+    <button role="tab" aria-selected="false" data-tab="pay">Pay</button>
+    <button role="tab" aria-selected="false" data-tab="log">Log</button>
+    <button role="tab" aria-selected="false" data-tab="skills">Skills</button>
+    <button role="tab" aria-selected="false" data-tab="docs">Docs</button>
+  </nav>
+
+  <div class="panel on" id="tab-roster">
+    <div class="viewBanner" id="viewBanner" style="display:none"></div>
+    <div class="fatigue hide" id="fatigue">
+      <div class="lab">Before you drive</div>
+      <h3>You're finishing on nights.</h3>
+      <p>Seventeen hours awake slows your reactions about as much as a 0.05 blood alcohol reading. Twenty-four hours is closer to 0.10. After a night shift you're at the bottom of your body clock, on a quiet road, in the worst part of the day for it — and the first sign of a microsleep is usually waking up.</p>
+      <ul>
+        <li>Sleep before you drive, not after. Even a few hours at camp beats pushing through.</li>
+        <li>If you must go, a 20 minute nap and a coffee first buys you about an hour — no more.</li>
+        <li>Share the driving, or wear the extra night and leave in daylight.</li>
+        <li>Pulling over for a sleep is never the wrong call.</li>
+      </ul>
+    </div>
+    <div class="ringbox">
+      <svg class="ring" viewBox="0 0 300 300" id="ring"></svg>
+      <div class="core" id="core">
+        <div class="photoWrap" id="photoWrap" style="display:none"><img id="corePhoto" alt=""></div>
+        <div class="kicker" id="coreKicker">Today</div>
+        <div class="big" id="coreBig">—</div>
+        <div class="sub" id="coreSub"></div>
       </div>
-      <button class="btn ghost" id="btnSetup">Setup</button>
+    </div>
+    <div class="legend">
+      <div><i class="dot D"></i>Day</div><div><i class="dot N"></i>Night</div>
+      <div><i class="dot T"></i>Travel</div><div><i class="dot O"></i>Home</div>
+    </div>
+    <div id="photoRow">
+      <label for="photoIn">Add your why</label>
+      <button id="photoClear" style="display:none">Remove photo</button>
+    </div>
+    <input type="file" id="photoIn" accept="image/*" style="display:none">
+    <div class="strip">
+      <div class="cell"><div class="lab">Next change</div><div class="val" id="nextVal">—</div><div class="note" id="nextNote"></div></div>
+      <div class="cell"><div class="lab">Cycle position</div><div class="val" id="posVal">—</div><div class="note" id="posNote"></div></div>
     </div>
 
-    <div class="card">
-      <div class="hubwrap" id="hubwrap">
-        <svg id="wheel" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"></svg>
-        <div class="hub empty" id="hub"><div class="hint">Tap for<br>your photo</div></div>
-        <div class="hubcap" id="hubcap" hidden></div>
+    <section id="patternSec">
+      <h2>Your roster</h2>
+      <div class="presets" id="presets"></div>
+      <p class="hint">Tap any day to change it — day, night, home, travel. Travel days sit inside your break: still your time, just spent driving.</p>
+      <div class="chips" id="chips"></div>
+      <div class="rowbtns">
+        <button class="ghost" id="addDay">Add day</button>
+        <button class="ghost" id="delDay">Remove day</button>
       </div>
-      <div class="pillrow" style="justify-content:center;margin-top:12px">
-        <button class="pill" id="btnPhoto">Change photo</button>
-        <button class="pill" id="btnPhotoRm" hidden>Remove</button>
+      <div class="field" style="margin-top:14px">
+        <label for="anchor">Day 1 fell on</label>
+        <input type="date" id="anchor">
       </div>
-    </div>
-
-    <div class="card">
-      <div class="eyebrow">Right now</div>
-      <div class="big" id="rNow">—</div>
-      <div class="small dim" id="rNext" style="margin-top:6px"></div>
-      <div class="hr"></div>
-      <div class="row between small mono">
-        <span style="color:var(--work)">■ Work</span>
-        <span style="color:var(--home)">■ Home</span>
-        <span style="color:var(--travel)">■ Travel</span>
+      <div class="checkline" id="anchorCheck"></div>
+      <div class="nudge">
+        <button id="nudgeBack">&#9664; Shift back a day</button>
+        <button id="nudgeFwd">Shift forward a day &#9654;</button>
       </div>
-    </div>
+      <p class="hint">Day 1 is the first shift after your longest break. If the line above doesn't match where you actually are today, nudge it until it does.</p>
+    </section>
 
-    <div class="card">
-      <div class="eyebrow">Next 14 days</div>
-      <div id="rList"></div>
-    </div>
-  </div>
-</section>
+    <section>
+      <h2>Next six weeks</h2>
+      <ol class="up" id="upcoming"></ol>
+    </section>
 
-<!-- ================= PAY ================= -->
-<section class="tab" id="tab-pay">
-  <div class="wrap">
-    <div class="eyebrow">Shift Engine</div>
-    <h1 style="font-size:20px">Pay</h1>
-
-    <div class="card">
-      <div class="eyebrow">Estimate per swing</div>
-      <div class="big" id="pSwing">$0</div>
-      <div class="small dim" id="pBreak" style="margin-top:6px"></div>
-      <div class="hr"></div>
-      <div class="row between"><span class="small dim">Per fortnight</span><span class="mono" id="pFn">$0</span></div>
-      <div class="row between" style="margin-top:8px"><span class="small dim">Per year (rough)</span><span class="mono" id="pYr">$0</span></div>
-      <div class="row between" style="margin-top:8px" id="pLeaveRow"><span class="small dim">Annual leave accrued / swing</span><span class="mono" id="pLeave">—</span></div>
-    </div>
-
-    <div class="card">
-      <div class="eyebrow">Your numbers</div>
-      <label class="f"><span>Base rate ($/hr)</span><input type="number" id="pRate" step="0.01"></label>
-      <label class="f"><span>Hours per shift</span><input type="number" id="pHrs" step="0.5"></label>
-      <label class="f"><span>Casual loading (%)</span><input type="number" id="pLoad" step="1"></label>
-      <label class="f"><span>Night / site allowance per shift ($)</span><input type="number" id="pAllow" step="0.01"></label>
-      <p class="warn">An estimate only — it doesn't know about tax, super, overtime bands or penalty rates. Your payslip is the real number; use this to spot when something looks off.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ================= LOG ================= -->
-<section class="tab" id="tab-log">
-  <div class="wrap">
-    <div class="eyebrow">Shift Engine</div>
-    <h1 style="font-size:20px">Log</h1>
-
-    <div class="card">
-      <div class="eyebrow">Kilometres this financial year</div>
-      <div class="big" id="lKm">0 km</div>
-      <div class="small dim" id="lClaim" style="margin-top:6px"></div>
-      <label class="f"><span>Cents per km (check the current ATO rate)</span><input type="number" id="lRate" step="0.01" value="0.88"></label>
-    </div>
-
-    <div class="card">
-      <div class="eyebrow">Add entry</div>
-      <label class="f"><span>Date</span><input type="date" id="lDate"></label>
-      <div class="row" style="gap:10px">
-        <label class="f" style="flex:1"><span>Km</span><input type="number" id="lKmIn" step="1" placeholder="310"></label>
-        <label class="f" style="flex:1"><span>Camp check-in</span><input type="time" id="lTime"></label>
+    <section id="shareSec">
+      <h2>Share your roster</h2>
+      <p class="hint">Sends the roster only — dates on and dates home. No pay, no tickets, no hours. Whoever opens it gets a read-only copy that stays right as the cycle rolls over.</p>
+      <div class="shareBox">
+        <div class="rowbtns" style="margin-top:0">
+          <button class="ghost" id="shareLink">Send a link</button>
+        </div>
+        <div class="rowbtns">
+          <button class="ghost" id="shareText">Copy as a message</button>
+        </div>
+        <p class="hint" id="shareMsg" style="margin-bottom:0"></p>
       </div>
-      <label class="f"><span>Note</span><input type="text" id="lNote" placeholder="Drive up — Biloela"></label>
-      <button class="btn wide" id="lAdd" style="margin-top:14px">Add to log</button>
-    </div>
+    </section>
 
-    <div class="card">
-      <div class="eyebrow">Entries</div>
-      <div id="lList"><p class="dim small">Nothing logged yet.</p></div>
-    </div>
+    <section id="themeSec">
+      <h2>Colour scheme</h2>
+      <p class="hint">Six to choose from. High Vis is built for reading in full sun; Pit Night and Cold Start are the easy ones on nights.</p>
+      <div class="themes" id="themes"></div>
+      <div class="rowbtns" style="margin-top:18px">
+        <button class="ghost" id="resetAll">Start over</button>
+      </div>
+      <p class="hint" id="saveState"></p>
+    </section>
   </div>
-</section>
 
-<!-- ================= SKILLS ================= -->
-<section class="tab" id="tab-skills">
-  <div class="wrap">
-    <div class="eyebrow">Shift Engine</div>
-    <h1 style="font-size:20px">Skills</h1>
+  <div class="panel" id="tab-pay">
+    <section>
+      <h2>How you're employed</h2>
+      <div class="seg" role="group">
+        <button id="segCasual" aria-pressed="true">Casual</button>
+        <button id="segPerm" aria-pressed="false">Permanent</button>
+      </div>
+      <p class="hint" id="empHint"></p>
+      <div class="field"><label for="rate">Hourly rate</label>
+        <div><span class="unit">$</span><input type="number" id="rate" value="" step="0.01" placeholder="0.00"></div></div>
+      <div class="field"><label for="hours">Paid hours per shift</label>
+        <div><span class="unit">hrs</span><input type="number" id="hours" value="12.5" step="0.25"></div></div>
+      <div class="field"><label for="superRate">Super</label>
+        <div><span class="unit">%</span><input type="number" id="superRate" value="12" step="0.5"></div></div>
+      <div class="field" id="leaveRow" style="display:none"><label for="alWeeks">Annual leave</label>
+        <select id="alWeeks"><option value="4">4 weeks</option><option value="5" selected>5 weeks (shiftworker)</option></select></div>
 
-    <div class="card">
-      <div class="eyebrow">What do you run?</div>
-      <div class="pillrow" id="sMach" style="margin-top:10px"></div>
-    </div>
+      <div class="payhero">
+        <div class="lab">Gross per cycle</div>
+        <div class="amt" id="cycleAmt">—</div>
+        <div class="note" id="cycleNote" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
+      </div>
+      <div class="field" style="margin-top:4px"><label for="annualIn">Or enter a package instead</label>
+        <div><span class="unit">$</span><input type="number" id="annualIn" value="0" step="1000" placeholder="0"></div></div>
+      <p class="hint" id="annualNote" style="margin-top:6px"></p>
+      <div class="paygrid">
+        <div class="cell"><div class="lab">Annualised</div>
+          <div class="val mono" id="annAmt">—</div><div class="note" id="annNote"></div></div>
+        <div class="cell"><div class="lab">Super a year</div>
+          <div class="val mono" id="supAmt">—</div><div class="note">On top of the rate</div></div>
+      </div>
 
-    <div class="card">
-      <div class="eyebrow">Tickets</div>
-      <div id="sTickets"><p class="dim small">Pick a machine above, then attach its ticket.</p></div>
-    </div>
+      <div class="paygrid" style="margin-top:10px">
+        <div class="cell"><div class="lab">Hours on site a year</div>
+          <div class="val mono" id="siteHrs">—</div><div class="note" id="siteHrsNote"></div></div>
+        <div class="cell"><div class="lab">Nights on site</div>
+          <div class="val mono" id="siteNights">—</div><div class="note">Per year, away from home</div></div>
+      </div>
+    </section>
 
-    <div class="card">
-      <div class="eyebrow">Resume</div>
-      <div id="sResume"><p class="dim small">No resume attached.</p></div>
-      <button class="btn ghost wide" id="sResumeAdd" style="margin-top:10px">Attach resume</button>
-      <button class="btn wide" id="sShare" style="margin-top:10px">Share operator profile</button>
-      <p class="warn">Share sends your profile text, and the resume file where your phone supports it. Tickets stay on the device.</p>
-    </div>
+    <section id="accrualSection" style="display:none">
+      <h2>Leave you're banking</h2>
+      <p class="hint">Builds on ordinary hours — 38 a week — not the full twelve and a half.</p>
+      <div class="paygrid">
+        <div class="cell"><div class="lab">Annual leave</div>
+          <div class="val mono" id="alCycle">—</div><div class="note" id="alNote"></div></div>
+        <div class="cell"><div class="lab">Personal leave</div>
+          <div class="val mono" id="plCycle">—</div><div class="note" id="plNote"></div></div>
+      </div>
+    </section>
+
+    <section id="countSection">
+      <h2>Going permanent</h2>
+      <div class="field"><label for="startDate">Started casual</label>
+        <input type="date" id="startDate"></div>
+      <div class="count" style="margin-top:16px">
+        <div class="n" id="cdNum">—</div>
+        <div class="u" id="cdUnit">days until you can ask</div>
+        <div class="bar"><i id="cdBar" style="width:0%"></i></div>
+        <div class="when" id="cdWhen"></div>
+      </div>
+      <p class="hint" style="margin-top:16px">Six months in, you can put it in writing yourself — they don't have to offer it. They get 21 days to answer and can only knock it back on limited grounds.</p>
+    </section>
   </div>
-</section>
 
-<!-- ================= DOCS ================= -->
-<section class="tab" id="tab-docs">
-  <div class="wrap">
-    <div class="eyebrow">Shift Engine</div>
-    <h1 style="font-size:20px">Docs</h1>
+  <div class="panel" id="tab-log">
+    <section>
+      <h2>Check the payslip</h2>
+      <p class="hint">Your pay runs off swipe in, swipe out. So does this. Put in what the gate recorded, then the gross off the payslip.</p>
+      <table><thead><tr><th>Shift</th><th>In</th><th>Out</th><th class="hrs">Hrs</th></tr></thead>
+        <tbody id="swipeBody"></tbody></table>
+      <div class="field" style="margin-top:16px">
+        <label for="slip">Payslip gross</label>
+        <div><span class="unit">$</span><input type="number" id="slip" value="0" step="0.01"></div>
+      </div>
+      <div class="verdict" id="verdict">
+        <div class="head" id="vHead">Enter your payslip gross</div>
+        <div class="body" id="vBody"></div>
+      </div>
+      <div class="warn">Payslips arrive by email. A later version reads them out of your inbox and runs this check without you typing anything.</div>
+    </section>
 
-    <div class="card">
-      <div class="eyebrow">Add a procedure</div>
-      <label class="f"><span>Title</span><input type="text" id="dTitle" placeholder="Excavator pre-start"></label>
-      <label class="f"><span>Link (optional)</span><input type="text" id="dLink" placeholder="https://…"></label>
-      <label class="f"><span>Notes</span><textarea id="dNote" placeholder="Steps, isolation points, anything you want on hand."></textarea></label>
-      <button class="btn wide" id="dAdd" style="margin-top:14px">Save procedure</button>
-    </div>
+    <section>
+      <h2>How long have you been awake?</h2>
+      <p class="hint">Before you drive home off nights. Set when you woke up and it does the rest.</p>
+      <div class="field"><label for="wokeTime">I woke up at</label>
+        <div><input type="time" id="wokeTime" value="17:00"></div></div>
+      <div class="field"><label for="wokeDay">That was</label>
+        <select id="wokeDay">
+          <option value="0">Today</option>
+          <option value="1" selected>Yesterday</option>
+        </select></div>
+      <div class="awake" style="margin-top:16px">
+        <div class="big2" id="awakeHrs">—</div>
+        <div class="u2">hours awake</div>
+        <div class="meter"><i id="awakeBar" style="width:0%"></i></div>
+        <div class="scale"><span>0</span><span>17 hrs ≈ 0.05</span><span>24 hrs ≈ 0.10</span></div>
+        <div class="verdict2" id="awakeVerdict"></div>
+      </div>
+      <div class="warn">The blood alcohol comparison comes from sleep research on reaction times and it isn’t a legal measure — you can be dangerously impaired by fatigue and still be under 0.05 on a breath test. Nobody has ever been booked for it. Plenty have been killed by it.</div>
+    </section>
 
-    <div class="card">
-      <div class="eyebrow">Saved</div>
-      <div id="dList"><p class="dim small">Nothing saved yet.</p></div>
-    </div>
+    <section>
+      <h2>Travel &amp; camp</h2>
+      <div class="field"><label for="km">Round trip, home to site</label>
+        <div><span class="unit">km</span><input type="number" id="km" value="" step="10" placeholder="0"></div></div>
+      <div class="field"><label for="depTime">Leave home</label>
+        <div><input type="time" id="depTime" value="17:00"></div></div>
+      <div class="field"><label for="campTime">Camp check-in</label>
+        <div><input type="time" id="campTime" value="20:00"></div></div>
+      <div class="paygrid" style="margin-top:16px">
+        <div class="cell"><div class="lab">Km a year</div>
+          <div class="val mono" id="kmYear">—</div><div class="note" id="kmNote"></div></div>
+        <div class="cell"><div class="lab">Logged for tax</div>
+          <div class="val mono" id="kmClaim">—</div><div class="note">At 91c, capped at 5,000 km</div></div>
+      </div>
+      <div class="warn" style="border-left-color:var(--bad)">If your block finishes on nights, don't drive straight home. Sleep first, even a few hours. Coming off nights your reactions are down around where they'd be at 0.05, and the drive back is the most dangerous part of the swing.</div>
+      <div class="warn">Home-to-site driving is usually private commuting and not deductible. Keep the log anyway and let your accountant decide what's claimable.</div>
+    </section>
   </div>
-</section>
 
-<nav class="tabs" id="nav">
-  <button data-t="roster" class="on"><span class="ic">◎</span>Roster</button>
-  <button data-t="pay"><span class="ic">$</span>Pay</button>
-  <button data-t="log"><span class="ic">≡</span>Log</button>
-  <button data-t="skills"><span class="ic">★</span>Skills</button>
-  <button data-t="docs"><span class="ic">▤</span>Docs</button>
-</nav>
+  <div class="panel" id="tab-skills">
+    <section>
+      <h2>What you run</h2>
+      <div class="seg" role="group" style="margin-top:0">
+        <button id="skSingle" aria-pressed="false">Single skilled</button>
+        <button id="skMulti" aria-pressed="true">Multi skilled</button>
+      </div>
+      <p class="hint" id="skHint"></p>
+      <div class="machines" id="machines"></div>
+    </section>
+
+    <section id="hoursSec">
+      <h2>Hours on the seat</h2>
+      <p class="hint">The number every application asks for and nobody can remember. Update it at the end of a swing.</p>
+      <div id="hoursList"></div>
+    </section>
+
+    <section>
+      <h2>Tickets &amp; medicals</h2>
+      <p class="hint">Set your own dates. Anything inside 60 days goes amber, anything past goes red — so a lapsed medical never costs you a swing.</p>
+      <div id="ticketList"></div>
+      <div class="rowbtns"><button class="ghost" id="addTicket">Add a ticket</button></div>
+    </section>
+
+    <section>
+      <h2>Your resume</h2>
+      <p class="hint">Keep the current one here so it's on you when a job comes up, not sitting on a laptop at home.</p>
+      <div id="resumeBox"></div>
+      <div class="rowbtns" style="margin-top:10px">
+        <label class="ghost" for="resumeIn" style="line-height:1.6">Upload resume</label>
+        <button class="ghost" id="resumeClear" style="display:none">Remove</button>
+      </div>
+      <input type="file" id="resumeIn" accept=".pdf,.doc,.docx,image/*" style="display:none">
+    </section>
+
+    <section>
+      <h2>Send your job pack</h2>
+      <p class="hint">Everything a contractor asks for, in one go — your tickets, your medical, your resume and your profile. One button instead of an hour of digging.</p>
+      <div class="packBox">
+        <div class="packList" id="packList"></div>
+        <div class="rowbtns" style="margin-top:0">
+          <button class="ghost" id="sendPack">Send the lot</button>
+        </div>
+        <p class="hint" id="packMsg" style="margin-bottom:0"></p>
+        <div class="quota" id="quotaLine"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Your operator profile</h2>
+      <p class="hint">This is what gets sent when a contractor asks what you can run.</p>
+      <div class="profile">
+        <div class="pl">Summary</div>
+        <div class="pv" id="profileOut"></div>
+      </div>
+      <div class="rowbtns" style="margin-top:12px"><button class="ghost" id="copyProfile">Copy to clipboard</button></div>
+    </section>
+  </div>
+
+  <div class="panel" id="tab-docs">
+    <section>
+      <h2>Site documents</h2>
+      <p class="hint">Your own copies — pre-starts, notes, tickets, anything you want at hand. Tag each one to a machine and it filters to what you run.</p>
+      <div class="machines" id="docFilter"></div>
+      <label class="drop" for="fileIn">Add a document<br><span class="mono" style="font-size:11px">PDF, image, anything</span></label>
+      <input type="file" id="fileIn" multiple style="display:none">
+      <ul class="plain" id="docList"></ul>
+      <div class="empty" id="docEmpty">Nothing loaded yet.</div>
+      <div class="warn">Site SOPs are controlled documents and belong in the company's system, where the version is guaranteed current. Keep your own copies here if you want them handy, but check the site copy before you act on one.</div>
+    </section>
+  </div>
+
+  <footer>Your settings are saved on this device only. Nothing is uploaded anywhere.</footer>
+</div>
 
 <script>
-/* =========================================================
-   THE ULTIMATE SHIFT ENGINE
-   BUILD — bump this every time you push, then check the pill
-   bottom-right in a private tab. New number = live.
-   ========================================================= */
-var BUILD = "v1";
-document.getElementById('buildStamp').textContent = BUILD;
-console.log('SHIFT ENGINE BUILD:', BUILD);
+(function(){
+  const ORDER=['D','N','O','T'];
+  const NAME={D:'Day shift',N:'Night shift',O:'Home',T:'Travel day'};
+  const SHORT={D:'D',N:'N',O:'H',T:'T'};
+  const CVAR={D:'var(--day)',N:'var(--night)',O:'var(--home)',T:'var(--travel)'};
+  const dayMs=86400000, $=id=>document.getElementById(id);
 
-/* ---------- storage (falls back to memory if blocked) ---------- */
-var KEY = 'se_state_v1', mem = {};
-function load(){
-  try{ var r = localStorage.getItem(KEY); return r ? JSON.parse(r) : null; }
-  catch(e){ return mem[KEY] || null; }
-}
-function save(){
-  try{ localStorage.setItem(KEY, JSON.stringify(S)); }
-  catch(e){
-    mem[KEY] = S;
-    if(String(e).indexOf('uota') > -1) alert('Storage is full — remove a ticket photo or two.');
+  const THEMES=[
+    {id:'pit',n:'Pit Night',v:{bg:'#0C0A14',bg2:'#15111F',glow:'#241B3A',surface:'#1A1526','surface-2':'#241C33',
+      line:'#332A47',text:'#F3EEF9',muted:'#9B90B0',ink:'#1A1005',day:'#FFB62E',day2:'#FF7A45',
+      night:'#4CC9F0',night2:'#4361EE',off:'#2F5A4B',home:'#3DD9A0',travel:'#F7529A',bad:'#FF5F6D',good:'#3DD9A0'}},
+    {id:'dragline',n:'Dragline',v:{bg:'#0B0C0E',bg2:'#14171B',glow:'#1E242B',surface:'#171B21','surface-2':'#1F252D',
+      line:'#2E3742',text:'#EDF1F5',muted:'#8B97A5',ink:'#14120A',day:'#FFD100',day2:'#FF9E00',
+      night:'#5AA9E6',night2:'#2E5EAA',off:'#2C4A2C',home:'#5FD35F',travel:'#FF6B35',bad:'#FF5C5C',good:'#5FD35F'}},
+    {id:'bowen',n:'Red Dirt',v:{bg:'#120C09',bg2:'#1C1310',glow:'#33211A',surface:'#1F1613','surface-2':'#2A1E19',
+      line:'#3D2C24',text:'#F6EEE7',muted:'#A8938A',ink:'#1A0F06',day:'#F0A93F',day2:'#C4622B',
+      night:'#7FA8C9',night2:'#40638A',off:'#4A5A44',home:'#9CBF8E',travel:'#D45D3C',bad:'#E05A47',good:'#9CBF8E'}},
+    {id:'frost',n:'Cold Start',v:{bg:'#080D12',bg2:'#101820',glow:'#1A2733',surface:'#131C25','surface-2':'#1B2733',
+      line:'#2A3A47',text:'#EAF2F8',muted:'#86A0B3',ink:'#04110D',day:'#7DE2D1',day2:'#34BE82',
+      night:'#6C8EFF',night2:'#3B5BDB',off:'#2A4A48',home:'#A0E7E5',travel:'#FF8FAB',bad:'#FF7A8A',good:'#7DE2D1'}},
+    {id:'hivis',n:'High Vis',v:{bg:'#000000',bg2:'#0A0A0A',glow:'#1A1A00',surface:'#121212','surface-2':'#1C1C1C',
+      line:'#3A3A3A',text:'#FFFFFF',muted:'#A8A8A8',ink:'#000000',day:'#FFEE00',day2:'#FFB000',
+      night:'#00E5FF',night2:'#0091EA',off:'#1E4A2E',home:'#00FF87',travel:'#FF3D71',bad:'#FF3D71',good:'#00FF87'}},
+    {id:'daylight',n:'Daylight',v:{bg:'#E9EDF3',bg2:'#F7F9FC',glow:'#DDE5F0',surface:'#FFFFFF','surface-2':'#F2F5FA',
+      line:'#D3DCE8',text:'#101720',muted:'#5E6B7E',ink:'#FFFFFF',day:'#E07B00',day2:'#C25100',
+      night:'#1B6FD4',night2:'#0B4CA1',off:'#B8D4C6',home:'#0E8F5E',travel:'#C7256B',bad:'#C22B2B',good:'#0E8F5E'}}
+  ];
+  let themeIdx=0;
+  function applyTheme(i){
+    themeIdx=i;
+    const v=THEMES[i].v, r=document.documentElement;
+    Object.keys(v).forEach(k=>r.style.setProperty('--'+k,v[k]));
+    renderThemes();
   }
-}
-
-var PRESETS = [
-  {id:'7/7',   label:'7 / 7',   on:7,  off:7},
-  {id:'8/6',   label:'8 / 6',   on:8,  off:6},
-  {id:'4/3',   label:'4 / 3',   on:4,  off:3},
-  {id:'5/2',   label:'5 / 2',   on:5,  off:2},
-  {id:'14/7',  label:'14 / 7',  on:14, off:7},
-  {id:'2/2/3', label:'2 / 2 / 3', on:2, off:2},
-  {id:'custom',label:'Custom',  on:7,  off:7}
-];
-var THEMES = [
-  {id:'',        label:'Amber'},
-  {id:'hivis',   label:'Hi-Vis'},
-  {id:'coal',    label:'Coal'},
-  {id:'steel',   label:'Steel'},
-  {id:'dust',    label:'Dust'},
-  {id:'daylight',label:'Daylight'}
-];
-var MACHINES = ['Excavator','Haul truck','Dozer','Grader','Loader','Water cart','Drill','Scraper','Service truck','Light vehicle'];
-
-var S = load() || {
-  setup:false, name:'', site:'', emp:'casual',
-  roster:'7/7', on:7, off:7, start:'', travel:true,
-  rate:0, hrs:12, load:25, allow:0,
-  theme:'', photo:'', kmRate:0.88,
-  log:[], machines:[], tickets:{}, resume:null, docs:[]
-};
-
-/* ---------- helpers ---------- */
-function $(id){ return document.getElementById(id); }
-function money(n){ return '$' + (Math.round(n)).toLocaleString(); }
-function iso(d){ return d.toISOString().slice(0,10); }
-function fromISO(s){ var p = s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
-function addDays(d,n){ var x = new Date(d.getTime()); x.setDate(x.getDate()+n); return x; }
-function midnight(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
-function fmt(d){ return d.toLocaleDateString([], {weekday:'short', day:'numeric', month:'short'}); }
-
-/* cycle = array of 'W' | 'H' | 'T' — travel days sit inside the break */
-function cycle(){
-  var on = Math.max(1, +S.on || 1), off = Math.max(1, +S.off || 1), a = [];
-  for(var i=0;i<on;i++) a.push('W');
-  for(var j=0;j<off;j++) a.push('H');
-  if(S.travel && off >= 2){ a[on] = 'T'; a[on+off-1] = 'T'; }
-  return a;
-}
-function dayType(date){
-  if(!S.start) return null;
-  var c = cycle();
-  var diff = Math.round((midnight(date) - midnight(fromISO(S.start))) / 86400000);
-  var i = ((diff % c.length) + c.length) % c.length;
-  return {type:c[i], index:i, len:c.length};
-}
-var LABEL = {W:'Work', H:'Home', T:'Travel'};
-var COLOR = {W:'var(--work)', H:'var(--home)', T:'var(--travel)'};
-
-/* ---------- roster wheel ---------- */
-function drawWheel(){
-  var svg = $('wheel'), c = cycle(), n = c.length;
-  if(!S.start){ svg.innerHTML = ''; return; }
-  var cx = 200, cy = 200, rOut = 190, rIn = 118, gap = 1.2, today = midnight(new Date());
-  var startDate = fromISO(S.start);
-  var diff = Math.round((today - midnight(startDate)) / 86400000);
-  var todayIdx = ((diff % n) + n) % n;
-  var cycleStart = addDays(today, -todayIdx);
-  var out = '';
-
-  for(var i=0;i<n;i++){
-    var a0 = (i / n) * 360 - 90 + gap, a1 = ((i+1) / n) * 360 - 90 - gap;
-    var d = arc(cx, cy, rOut, rIn, a0, a1);
-    var t = c[i], isToday = (i === todayIdx);
-    var date = addDays(cycleStart, i);
-    out += '<path d="' + d + '" fill="' + COLOR[t] + '" opacity="' + (isToday ? 1 : .34) + '"></path>';
-    if(isToday) out += '<path d="' + d + '" fill="none" stroke="var(--text)" stroke-width="2"></path>';
-
-    var mid = (a0 + a1) / 2, rad = (mid * Math.PI) / 180;
-    var lr = (rOut + rIn) / 2;
-    var lx = cx + lr * Math.cos(rad), ly = cy + lr * Math.sin(rad);
-    out += '<text x="' + lx + '" y="' + (ly - 3) + '" text-anchor="middle" font-family="' +
-           'ui-monospace,monospace" font-size="15" font-weight="700" fill="var(--bg)">' +
-           date.getDate() + '</text>';
-    out += '<text x="' + lx + '" y="' + (ly + 11) + '" text-anchor="middle" font-family="' +
-           'ui-monospace,monospace" font-size="8" letter-spacing="1" fill="var(--bg)">' +
-           (t === 'W' ? 'W' : t === 'T' ? 'T' : 'HOME') + '</text>';
+  function themeCard(t,i,onPick){
+    const b=document.createElement('button');
+    b.className='theme';b.setAttribute('aria-pressed',i===themeIdx);
+    b.innerHTML='<div class="sw">'+
+      ['day','night','travel','home'].map(k=>'<i style="background:'+t.v[k]+'"></i>').join('')+
+      '</div><div class="tn">'+t.n+'</div>';
+    b.style.background=t.v.surface;b.style.borderColor=i===themeIdx?t.v.day:t.v.line;
+    b.querySelector('.tn').style.color=i===themeIdx?t.v.text:t.v.muted;
+    b.addEventListener('click',()=>onPick(i));
+    return b;
   }
-  svg.innerHTML = out;
-}
-function arc(cx, cy, rO, rI, a0, a1){
-  function pt(r,a){ var t=(a*Math.PI)/180; return [cx+r*Math.cos(t), cy+r*Math.sin(t)]; }
-  var p1=pt(rO,a0), p2=pt(rO,a1), p3=pt(rI,a1), p4=pt(rI,a0);
-  var big = (a1-a0) > 180 ? 1 : 0;
-  return 'M'+p1[0]+' '+p1[1]+' A'+rO+' '+rO+' 0 '+big+' 1 '+p2[0]+' '+p2[1]+
-         ' L'+p3[0]+' '+p3[1]+' A'+rI+' '+rI+' 0 '+big+' 0 '+p4[0]+' '+p4[1]+' Z';
-}
-
-/* ---------- roster tab ---------- */
-function renderRoster(){
-  $('rHead').textContent = S.name ? S.name.split(' ')[0] + "'s roster" : 'Roster';
-  drawWheel();
-  sizeHub();
-
-  var t = dayType(new Date());
-  if(!t){ $('rNow').textContent = '—'; $('rNext').textContent = 'Run Setup to start.'; return; }
-  $('rNow').textContent = LABEL[t.type];
-  $('rNow').style.color = COLOR[t.type];
-
-  var i = 1, next = null;
-  while(i < 60){
-    var d = addDays(new Date(), i), dt = dayType(d);
-    if(dt.type !== t.type){ next = {d:d, t:dt.type}; break; }
-    i++;
-  }
-  $('rNext').textContent = next
-    ? LABEL[next.t] + ' starts ' + fmt(next.d) + ' — ' + i + (i === 1 ? ' day' : ' days') + ' away'
-    : '';
-
-  var list = '';
-  for(var k=0;k<14;k++){
-    var dd = addDays(new Date(), k), ty = dayType(dd).type;
-    list += '<div class="item"><span class="small">' + (k === 0 ? 'Today · ' : '') + fmt(dd) + '</span>' +
-            '<span class="mono small" style="color:' + COLOR[ty] + '">' + LABEL[ty] + '</span></div>';
-  }
-  $('rList').innerHTML = list;
-}
-
-/* ---------- photo hub ---------- */
-var photoInput = document.createElement('input');
-photoInput.type = 'file'; photoInput.accept = 'image/*'; photoInput.style.display = 'none';
-document.body.appendChild(photoInput);
-
-function sizeHub(){
-  var w = $('hubwrap').clientWidth || 320;
-  var d = Math.round(w * 0.56);
-  $('hub').style.width = $('hub').style.height = d + 'px';
-}
-window.addEventListener('resize', function(){ sizeHub(); });
-
-function paintPhoto(){
-  var hub = $('hub');
-  if(S.photo){
-    hub.className = 'hub';
-    hub.innerHTML = '<img src="' + S.photo + '"><div class="scrim"></div>';
-    $('btnPhotoRm').hidden = false;
-  }else{
-    hub.className = 'hub empty';
-    hub.innerHTML = '<div class="hint">Tap for<br>your photo</div>';
-    $('btnPhotoRm').hidden = true;
-  }
-  sizeHub();
-}
-$('btnPhoto').onclick = function(){ photoInput.click(); };
-$('btnPhotoRm').onclick = function(){ S.photo = ''; save(); paintPhoto(); };
-$('hubwrap').addEventListener('click', function(e){
-  var r = $('hubwrap').getBoundingClientRect();
-  var dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2);
-  if(Math.sqrt(dx*dx + dy*dy) < (r.width * 0.56)/2) photoInput.click();
-});
-photoInput.onchange = function(){
-  squash(photoInput.files[0], 520, function(data){ S.photo = data; save(); paintPhoto(); });
-  photoInput.value = '';
-};
-function squash(file, out, cb){
-  if(!file) return;
-  var fr = new FileReader();
-  fr.onload = function(){
-    var im = new Image();
-    im.onload = function(){
-      var side = Math.min(im.width, im.height);
-      var c = document.createElement('canvas'); c.width = c.height = out;
-      c.getContext('2d').drawImage(im,(im.width-side)/2,(im.height-side)/2,side,side,0,0,out,out);
-      cb(c.toDataURL('image/jpeg', 0.78));
-    };
-    im.src = fr.result;
-  };
-  fr.readAsDataURL(file);
-}
-
-/* ---------- pay ---------- */
-function renderPay(){
-  $('pRate').value = S.rate || '';
-  $('pHrs').value  = S.hrs || '';
-  $('pLoad').value = S.load || 0;
-  $('pAllow').value= S.allow || 0;
-
-  var shifts = Math.max(1, +S.on || 1);
-  var hrs = (+S.hrs || 0) * shifts;
-  var rate = (+S.rate || 0) * (S.emp === 'casual' ? (1 + (+S.load || 0)/100) : 1);
-  var swing = hrs * rate + (+S.allow || 0) * shifts;
-  var cycleLen = cycle().length;
-
-  $('pSwing').textContent = money(swing);
-  $('pBreak').textContent = shifts + ' shifts × ' + (+S.hrs || 0) + ' hrs at ' +
-    (S.emp === 'casual' ? money(rate).replace('$','$') + '/hr incl. loading' : money(rate) + '/hr');
-  $('pFn').textContent = money(swing / cycleLen * 14);
-  $('pYr').textContent = money(swing / cycleLen * 365);
-
-  if(S.emp === 'permanent'){
-    $('pLeaveRow').hidden = false;
-    $('pLeave').textContent = (hrs * 0.0769).toFixed(1) + ' hrs';
-  }else{
-    $('pLeaveRow').hidden = true;
-  }
-}
-['pRate','pHrs','pLoad','pAllow'].forEach(function(id){
-  $(id).addEventListener('input', function(){
-    S.rate = +$('pRate').value; S.hrs = +$('pHrs').value;
-    S.load = +$('pLoad').value; S.allow = +$('pAllow').value;
-    save(); renderPay();
-  });
-});
-
-/* ---------- log ---------- */
-function renderLog(){
-  $('lRate').value = S.kmRate;
-  var total = S.log.reduce(function(a,b){ return a + (+b.km || 0); }, 0);
-  $('lKm').textContent = total.toLocaleString() + ' km';
-  $('lClaim').textContent = 'About ' + money(total * (+S.kmRate || 0)) +
-    ' at ' + (+S.kmRate).toFixed(2) + '/km — confirm the rate and your logbook method with your accountant.';
-  if(!S.log.length){ $('lList').innerHTML = '<p class="dim small">Nothing logged yet.</p>'; return; }
-  $('lList').innerHTML = S.log.map(function(e,i){
-    return '<div class="item"><span class="small">' + e.date +
-      (e.km ? ' · ' + e.km + ' km' : '') + (e.time ? ' · in ' + e.time : '') +
-      (e.note ? '<br><span class="dim">' + e.note + '</span>' : '') +
-      '</span><button class="x" data-i="' + i + '">×</button></div>';
-  }).join('');
-  Array.prototype.forEach.call($('lList').querySelectorAll('.x'), function(b){
-    b.onclick = function(){ S.log.splice(+b.getAttribute('data-i'),1); save(); renderLog(); };
-  });
-}
-$('lAdd').onclick = function(){
-  var d = $('lDate').value || iso(new Date());
-  S.log.unshift({date:d, km:+$('lKmIn').value || 0, time:$('lTime').value, note:$('lNote').value});
-  $('lKmIn').value = ''; $('lNote').value = ''; $('lTime').value = '';
-  save(); renderLog();
-};
-$('lRate').addEventListener('input', function(){ S.kmRate = +$('lRate').value; save(); renderLog(); });
-
-/* ---------- skills ---------- */
-var ticketInput = document.createElement('input');
-ticketInput.type = 'file'; ticketInput.accept = 'image/*'; ticketInput.style.display = 'none';
-document.body.appendChild(ticketInput);
-var ticketFor = null;
-ticketInput.onchange = function(){
-  var m = ticketFor;
-  squash(ticketInput.files[0], 900, function(data){ S.tickets[m] = data; save(); renderSkills(); });
-  ticketInput.value = '';
-};
-
-var resumeInput = document.createElement('input');
-resumeInput.type = 'file'; resumeInput.accept = '.pdf,.doc,.docx,image/*';
-resumeInput.style.display = 'none';
-document.body.appendChild(resumeInput);
-resumeInput.onchange = function(){
-  var f = resumeInput.files[0]; if(!f) return;
-  S.resume = {name:f.name}; window.__resumeFile = f; save(); renderSkills();
-};
-
-function renderSkills(){
-  $('sMach').innerHTML = MACHINES.map(function(m){
-    return '<button class="pill ' + (S.machines.indexOf(m) > -1 ? 'on' : '') + '" data-m="' + m + '">' + m + '</button>';
-  }).join('');
-  Array.prototype.forEach.call($('sMach').querySelectorAll('.pill'), function(b){
-    b.onclick = function(){
-      var m = b.getAttribute('data-m'), i = S.machines.indexOf(m);
-      if(i > -1){ S.machines.splice(i,1); delete S.tickets[m]; } else { S.machines.push(m); }
-      save(); renderSkills();
-    };
-  });
-
-  if(!S.machines.length){
-    $('sTickets').innerHTML = '<p class="dim small">Pick a machine above, then attach its ticket.</p>';
-  }else{
-    $('sTickets').innerHTML = S.machines.map(function(m){
-      var t = S.tickets[m];
-      return '<div class="item"><div><div class="small">' + m + '</div>' +
-        (t ? '<div class="tick"><img src="' + t + '"><span class="dim small">Ticket attached</span></div>'
-           : '<div class="dim small">No ticket</div>') + '</div>' +
-        '<button class="pill" data-add="' + m + '">' + (t ? 'Replace' : 'Attach') + '</button></div>';
-    }).join('');
-    Array.prototype.forEach.call($('sTickets').querySelectorAll('[data-add]'), function(b){
-      b.onclick = function(){ ticketFor = b.getAttribute('data-add'); ticketInput.click(); };
+  function renderThemes(){
+    [['themes',null],['sThemes',null]].forEach(([id])=>{
+      const box=$(id);if(!box)return;box.innerHTML='';
+      THEMES.forEach((t,i)=>box.appendChild(themeCard(t,i,applyTheme)));
     });
   }
 
-  $('sResume').innerHTML = S.resume
-    ? '<div class="item"><span class="small">' + S.resume.name + '</span>' +
-      '<button class="x" id="sResumeRm">×</button></div>'
-    : '<p class="dim small">No resume attached.</p>';
-  if($('sResumeRm')) $('sResumeRm').onclick = function(){
-    S.resume = null; window.__resumeFile = null; save(); renderSkills();
-  };
-}
-$('sResumeAdd').onclick = function(){ resumeInput.click(); };
-$('sShare').onclick = function(){
-  var txt = (S.name || 'Operator') + (S.site ? ' — ' + S.site : '') + '\n\n' +
-    'Machines: ' + (S.machines.join(', ') || 'not listed') + '\n' +
-    'Tickets held: ' + (Object.keys(S.tickets).join(', ') || 'none attached') + '\n' +
-    'Roster: ' + S.roster + (S.emp ? ' · ' + S.emp : '');
-  var data = {title:'Operator profile', text:txt};
-  if(window.__resumeFile && navigator.canShare && navigator.canShare({files:[window.__resumeFile]})){
-    data.files = [window.__resumeFile];
+  const PRESETS=[
+    {n:'Lifestyle 4/5 5/4 5/5', p:'DDNNOOOOTDDNNNOOOTDDDNNOOOOT'},
+    {n:'7/7 days',              p:'DDDDDDDOOOOOOO'},
+    {n:'7/7 day & night',       p:'DDDDDDDOOOOOOONNNNNNNOOOOOOO'},
+    {n:'2/2/3',                 p:'DDOONNNOODDNNOO'.slice(0,14)},
+    {n:'14/7',                  p:'DDDDDDDNNNNNNNOOOOOOO'},
+    {n:'8/6',                   p:'DDDDNNNNOOOOOO'},
+    {n:'9/5',                   p:'DDDDDNNNNOOOOO'}
+  ];
+  let pattern=PRESETS[0].p.split('');
+  let presetIdx=0, casual=true, swipes=null, docs=[];
+
+  const today=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())};
+  const anchorDate=()=>{const v=$('anchor').value.split('-').map(Number);return new Date(v[0],v[1]-1,v[2])};
+  const idxFor=d=>{const n=pattern.length;return((Math.round((d-anchorDate())/dayMs)%n)+n)%n};
+  const dateFor=i=>{const t=today();let d=i-idxFor(t);if(d<0)d+=pattern.length;return new Date(t.getTime()+d*dayMs)};
+  const fmt=d=>d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+  const money=n=>'$'+n.toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0});
+  const money2=n=>'$'+n.toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  /* setup wizard */
+  let step=0;
+  function showStep(n){
+    step=n;
+    document.querySelectorAll('.sStep').forEach(s=>s.classList.toggle('on',+s.dataset.step===n));
+    document.querySelectorAll('.steps i').forEach((b,i)=>b.classList.toggle('on',i<Math.max(1,n)));
+    $('setup').scrollTop=0;
   }
-  if(navigator.share){ navigator.share(data).catch(function(){}); }
-  else{
-    navigator.clipboard.writeText(txt).then(function(){ alert('Profile copied to clipboard.'); },
-      function(){ alert(txt); });
+  function renderSetupPresets(){
+    const box=$('sPresets');box.innerHTML='';
+    PRESETS.forEach((p,i)=>{
+      const b=document.createElement('button');
+      b.className='preset';b.textContent=p.n;b.setAttribute('aria-pressed',i===presetIdx);
+      b.addEventListener('click',()=>{presetIdx=i;pattern=p.p.split('');renderSetupPresets()});
+      box.appendChild(b);
+    });
   }
-};
-
-/* ---------- docs ---------- */
-function renderDocs(){
-  if(!S.docs.length){ $('dList').innerHTML = '<p class="dim small">Nothing saved yet.</p>'; return; }
-  $('dList').innerHTML = S.docs.map(function(d,i){
-    return '<div class="item"><div><div class="small">' + d.title + '</div>' +
-      (d.link ? '<a class="dim small" href="' + d.link + '" target="_blank" rel="noopener">Open link</a>' : '') +
-      (d.note ? '<div class="dim small">' + d.note.replace(/\n/g,'<br>') + '</div>' : '') +
-      '</div><button class="x" data-i="' + i + '">×</button></div>';
-  }).join('');
-  Array.prototype.forEach.call($('dList').querySelectorAll('.x'), function(b){
-    b.onclick = function(){ S.docs.splice(+b.getAttribute('data-i'),1); save(); renderDocs(); };
+  document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>showStep(step+1)));
+  document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>showStep(step-1)));
+  function sNudge(days){
+    const v=$('sAnchor').value.split('-').map(Number);
+    const d=new Date(v[0],v[1]-1,v[2]+days);
+    $('sAnchor').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    $('anchor').value=$('sAnchor').value; renderAnchorCheck();
+  }
+  $('sNudgeBack').addEventListener('click',()=>sNudge(-1));
+  $('sNudgeFwd').addEventListener('click',()=>sNudge(1));
+  $('sAnchor').addEventListener('input',()=>{$('anchor').value=$('sAnchor').value;renderAnchorCheck()});
+  $('sCasual').addEventListener('click',()=>{$('sCasual').setAttribute('aria-pressed','true');$('sPerm').setAttribute('aria-pressed','false')});
+  $('sPerm').addEventListener('click',()=>{$('sPerm').setAttribute('aria-pressed','true');$('sCasual').setAttribute('aria-pressed','false')});
+  $('sDone').addEventListener('click',()=>{
+    $('anchor').value=$('sAnchor').value;$('startDate').value=$('sStart').value;
+    $('rate').value=$('sRate').value;$('hours').value=$('sHours').value;$('km').value=$('sKm').value;
+    setEmployment($('sCasual').getAttribute('aria-pressed')==='true');
+    swipes=null;renderAll();$('setup').classList.add('hide');
   });
-}
-$('dAdd').onclick = function(){
-  if(!$('dTitle').value) return;
-  S.docs.unshift({title:$('dTitle').value, link:$('dLink').value, note:$('dNote').value});
-  $('dTitle').value = $('dLink').value = $('dNote').value = '';
-  save(); renderDocs();
-};
-
-/* ---------- tabs ---------- */
-Array.prototype.forEach.call($('nav').querySelectorAll('button'), function(b){
-  b.onclick = function(){
-    Array.prototype.forEach.call($('nav').querySelectorAll('button'), function(x){ x.classList.remove('on'); });
-    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(x){ x.classList.remove('on'); });
-    b.classList.add('on');
-    $('tab-' + b.getAttribute('data-t')).classList.add('on');
-    window.scrollTo(0,0);
-    if(b.getAttribute('data-t') === 'roster') renderRoster();
-  };
-});
-
-/* ---------- wizard ---------- */
-var step = 1;
-function wizShow(){
-  Array.prototype.forEach.call(document.querySelectorAll('.wizstep'), function(el){
-    el.hidden = (+el.getAttribute('data-s') !== step);
+  $('editBtn').addEventListener('click',()=>{
+    $('sAnchor').value=$('anchor').value;$('sStart').value=$('startDate').value;
+    $('sRate').value=$('rate').value;$('sHours').value=$('hours').value;$('sKm').value=$('km').value;
+    $('sCasual').setAttribute('aria-pressed',casual);$('sPerm').setAttribute('aria-pressed',!casual);
+    renderSetupPresets();renderThemes();$('setup').classList.remove('hide');showStep(1);
   });
-  Array.prototype.forEach.call($('wizSteps').children, function(i,n){
-    i.className = (n < step) ? 'on' : '';
+
+  document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected','false'));
+    b.setAttribute('aria-selected','true');
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+    $('tab-'+b.dataset.tab).classList.add('on');window.scrollTo(0,0);
+  }));
+
+  /* ring */
+  function arc(r,a0,a1){
+    const p=a=>[150+r*Math.cos(a*Math.PI/180),150+r*Math.sin(a*Math.PI/180)];
+    const[x0,y0]=p(a0),[x1,y1]=p(a1);
+    return `M ${x0} ${y0} A ${r} ${r} 0 ${(a1-a0)>180?1:0} 1 ${x1} ${y1}`;
+  }
+  const GRAD=`<defs>
+    <linearGradient id="gD" gradientUnits="userSpaceOnUse" x1="40" y1="40" x2="260" y2="260">
+      <stop offset="0" stop-color="var(--day)"/><stop offset="1" stop-color="var(--day2)"/></linearGradient>
+    <linearGradient id="gN" gradientUnits="userSpaceOnUse" x1="40" y1="40" x2="260" y2="260">
+      <stop offset="0" stop-color="var(--night)"/><stop offset="1" stop-color="var(--night2)"/></linearGradient>
+    <linearGradient id="gT" gradientUnits="userSpaceOnUse" x1="40" y1="40" x2="260" y2="260">
+      <stop offset="0" stop-color="var(--travel)"/><stop offset="1" stop-color="var(--night2)"/></linearGradient>
+  </defs>`;
+  const STROKE={D:'url(#gD)',N:'url(#gN)',T:'url(#gT)',O:'var(--off)'};
+
+  function drawRing(){
+    const svg=$('ring'),n=pattern.length,ti=idxFor(today());
+    const stepA=360/n,gap=Math.min(1.6,stepA*0.16);
+    let s=GRAD;
+    pattern.forEach((t,i)=>{
+      s+=`<path d="${arc(110,-90+i*stepA+gap,-90+(i+1)*stepA-gap)}" stroke="${STROKE[t]}" `+
+         `stroke-width="${t==='O'?15:25}" fill="none" data-i="${i}" class="${i===ti?'':'dim'}"/>`;
+    });
+    const every=n>32?2:1;
+    pattern.forEach((t,i)=>{
+      if(i%every)return;
+      const a=(-90+(i+0.5)*stepA)*Math.PI/180;
+      s+=`<text x="${150+134*Math.cos(a)}" y="${150+134*Math.sin(a)}" text-anchor="middle" `+
+         `dominant-baseline="central" class="${i===ti?'now':''}">${dateFor(i).getDate()}</text>`;
+    });
+    svg.innerHTML=s;
+    svg.querySelectorAll('path').forEach(p=>p.addEventListener('click',()=>peek(+p.dataset.i)));
+  }
+  let peekTimer=null;
+  function peek(i){
+    $('coreKicker').textContent='Day '+(i+1)+' of '+pattern.length;
+    $('coreBig').textContent=NAME[pattern[i]].split(' ')[0];
+    $('coreBig').style.color=CVAR[pattern[i]];
+    $('coreSub').textContent=fmt(dateFor(i));
+    clearTimeout(peekTimer);peekTimer=setTimeout(renderCore,3200);
+  }
+  function renderCore(){
+    const t=today(),i=idxFor(t),type=pattern[i];
+    let ahead=1;
+    while(ahead<400&&pattern[(i+ahead)%pattern.length]===type)ahead++;
+    const nextType=pattern[(i+ahead)%pattern.length];
+    $('coreKicker').textContent='Today';
+    $('coreBig').textContent=NAME[type].split(' ')[0];
+    $('coreBig').style.color=CVAR[type];
+    $('coreSub').textContent= type==='O'?(ahead===1?'Last day home':ahead+' days home left')
+      : type==='T'?'On the road tonight' : 'Day '+(i+1)+' of the cycle';
+    $('nextVal').textContent=NAME[nextType];
+    $('nextNote').textContent=(ahead===1?'Tomorrow — ':'In '+ahead+' days — ')+fmt(new Date(t.getTime()+ahead*dayMs));
+    $('posVal').textContent=(i+1)+' / '+pattern.length;
+    const home=pattern.filter(x=>x==='O'||x==='T').length;
+    const trav=pattern.filter(x=>x==='T').length;
+    $('posNote').textContent=home+' days home'+(trav?' ('+trav+' spent driving)':'');
+  }
+  function renderPresets(){
+    const box=$('presets');box.innerHTML='';
+    PRESETS.forEach((p,i)=>{
+      const b=document.createElement('button');
+      b.className='preset';b.textContent=p.n;b.setAttribute('aria-pressed',i===presetIdx);
+      b.addEventListener('click',()=>{presetIdx=i;pattern=p.p.split('');swipes=null;renderAll()});
+      box.appendChild(b);
+    });
+  }
+  function renderChips(){
+    const box=$('chips'),ti=idxFor(today());box.innerHTML='';
+    pattern.forEach((t,i)=>{
+      const b=document.createElement('button');
+      b.className='chip '+t+(i===ti?' today':'');
+      b.innerHTML='<span>'+dateFor(i).getDate()+'</span>'+SHORT[t];
+      b.setAttribute('aria-label',fmt(dateFor(i))+': '+NAME[t]);
+      b.addEventListener('click',()=>{pattern[i]=ORDER[(ORDER.indexOf(pattern[i])+1)%4];presetIdx=-1;swipes=null;renderAll()});
+      box.appendChild(b);
+    });
+  }
+  function renderUpcoming(){
+    const list=$('upcoming');list.innerHTML='';
+    const t=today();let run=null;
+    for(let k=0;k<42;k++){
+      const d=new Date(t.getTime()+k*dayMs),type=pattern[idxFor(d)];
+      if(run&&run.type===type){run.len++;run.end=d;continue}
+      if(run)push(run);run={type,start:d,end:d,len:1};
+    }
+    if(run)push(run);
+    function push(r){
+      const li=document.createElement('li');
+      const span=r.len===1?fmt(r.start):fmt(r.start)+' – '+fmt(r.end);
+      const label=r.type==='O'?'Home':NAME[r.type]+(r.len>1?'s':'');
+      li.innerHTML='<i class="dot '+r.type+'"></i><span class="upday">'+r.len+(r.len===1?' day':' days')+
+        '</span><span class="upname">'+label+'</span><span class="upmeta">'+span.replace(/,/g,'')+'</span>';
+      list.appendChild(li);
+    }
+  }
+
+  function setEmployment(isCasual){
+    casual=isCasual;
+    $('segCasual').setAttribute('aria-pressed',isCasual);
+    $('segPerm').setAttribute('aria-pressed',!isCasual);
+    $('leaveRow').style.display=isCasual?'none':'flex';
+    $('accrualSection').style.display=isCasual?'none':'block';
+    $('countSection').style.display=isCasual?'block':'none';
+    $('empHint').textContent=isCasual
+      ?'Flat rate, loading baked in, nothing accrues. No paid leave and the roster can change on you.'
+      :'Lower headline rate, but leave builds up every swing.';
+    renderPay();
+  }
+  function renderPay(){
+    const rate=+$('rate').value||0,hrs=+$('hours').value||0,sup=+$('superRate').value||0;
+    const shifts=pattern.filter(t=>t==='D'||t==='N').length;
+    const cycleHours=shifts*hrs, cycleGross=cycleHours*rate;
+    const cyclesYr=365.25/pattern.length, perYear=cycleGross*cyclesYr;
+    $('cycleAmt').textContent=money(cycleGross);
+    $('cycleNote').textContent=shifts+' shifts · '+cycleHours.toFixed(1)+' hours · '+pattern.length+' days';
+    $('annAmt').textContent=money(perYear);
+    $('annNote').textContent=cyclesYr.toFixed(1)+' cycles a year';
+    $('supAmt').textContent=money(perYear*sup/100);
+    const ordCycle=Math.min(cycleHours,38*(pattern.length/7));
+    const alWeeks=+$('alWeeks').value||4;
+    const alH=ordCycle*(alWeeks/52), plH=ordCycle*(76/1976);
+    $('alCycle').textContent=alH.toFixed(1)+' hrs';
+    $('alNote').textContent='per cycle · '+(alH*cyclesYr).toFixed(0)+' hrs a year';
+    $('plCycle').textContent=plH.toFixed(1)+' hrs';
+    $('plNote').textContent='per cycle · '+(plH*cyclesYr).toFixed(0)+' hrs a year';
+    renderCountdown();renderTravel();
+  }
+  function renderCountdown(){
+    const v=$('startDate').value.split('-').map(Number);
+    const start=new Date(v[0],v[1]-1,v[2]);
+    const elig=new Date(start.getFullYear(),start.getMonth()+6,start.getDate());
+    const t=today(), total=Math.round((elig-start)/dayMs), left=Math.round((elig-t)/dayMs);
+    $('cdBar').style.width=Math.max(0,Math.min(100,((total-left)/total)*100)).toFixed(1)+'%';
+    if(left>0){
+      $('cdNum').textContent=left;
+      $('cdUnit').textContent=left===1?'day until you can ask':'days until you can ask';
+      $('cdWhen').textContent='Eligible '+elig.toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})+
+        ' — that\u2019s '+(Math.round(left/pattern.length*10)/10)+' more cycles.';
+    }else{
+      $('cdNum').textContent='Now';$('cdUnit').textContent='you can put it in writing';
+      $('cdWhen').textContent='You passed six months on '+elig.toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})+'.';
+    }
+  }
+
+  function buildSwipes(){
+    const t=today(),out=[];
+    for(let k=1;k<=pattern.length&&out.length<8;k++){
+      const d=new Date(t.getTime()-k*dayMs),ty=pattern[idxFor(d)];
+      if(ty==='D'||ty==='N')out.unshift({date:d,type:ty,in:ty==='D'?'06:30':'18:30',out:ty==='D'?'19:00':'07:00'});
+      else if(out.length)break;
+    }
+    if(!out.length)for(let k=0;k<pattern.length&&out.length<8;k++){
+      const d=new Date(t.getTime()+k*dayMs),ty=pattern[idxFor(d)];
+      if(ty==='D'||ty==='N')out.push({date:d,type:ty,in:ty==='D'?'06:30':'18:30',out:ty==='D'?'19:00':'07:00'});
+      else if(out.length)break;
+    }
+    return out;
+  }
+  const spanHrs=(a,b)=>{const p=s=>{const[h,m]=s.split(':').map(Number);return h*60+m};
+    let d=p(b)-p(a);if(d<=0)d+=1440;return d/60};
+  function renderSwipes(){
+    if(!swipes)swipes=buildSwipes();
+    const body=$('swipeBody');body.innerHTML='';
+    swipes.forEach((s,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML='<td><i class="dot '+s.type+'" style="display:inline-block;margin-right:7px"></i>'+
+        s.date.toLocaleDateString('en-AU',{day:'numeric',month:'short'})+'</td>'+
+        '<td><input type="time" value="'+s.in+'" data-i="'+i+'" data-k="in"></td>'+
+        '<td><input type="time" value="'+s.out+'" data-i="'+i+'" data-k="out"></td>'+
+        '<td class="hrs">'+spanHrs(s.in,s.out).toFixed(2)+'</td>';
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',e=>{
+      swipes[+e.target.dataset.i][e.target.dataset.k]=e.target.value;renderSwipes();
+    }));
+    checkSlip();
+  }
+  function checkSlip(){
+    const rate=+$('rate').value||0;
+    const total=swipes.reduce((a,s)=>a+spanHrs(s.in,s.out),0);
+    const expect=total*rate, slip=+$('slip').value||0, v=$('verdict');
+    if(!slip){
+      v.className='verdict';$('vHead').textContent='Expected '+money2(expect);
+      $('vBody').textContent=swipes.length+' shifts · '+total.toFixed(2)+' hours at '+money2(rate)+'.';return;
+    }
+    const diff=slip-expect;
+    if(Math.abs(diff)<1){
+      v.className='verdict ok';$('vHead').textContent='Payslip checks out';
+      $('vBody').textContent=total.toFixed(2)+' hours at '+money2(rate)+' comes to '+money2(expect)+'. Nothing to chase.';
+    }else{
+      v.className='verdict bad';
+      $('vHead').textContent=(diff<0?'Short by ':'Over by ')+money2(Math.abs(diff));
+      $('vBody').textContent='Your swipes total '+total.toFixed(2)+' hours, worth '+money2(expect)+
+        '. The payslip says '+money2(slip)+' — a gap of '+(Math.abs(diff)/rate).toFixed(2)+' hours.';
+    }
+  }
+  function renderTravel(){
+    const km=+$('km').value||0, trips=pattern.filter(t=>t==='T').length;
+    const cyclesYr=365.25/pattern.length, kmYr=trips*km*cyclesYr;
+    $('kmYear').textContent=Math.round(kmYr).toLocaleString('en-AU');
+    $('kmNote').textContent=trips?trips+' trips a cycle':'no travel days set';
+    $('kmClaim').textContent=money(Math.min(kmYr,5000)*0.91);
+  }
+
+
+  /* ================= SKILLS ================= */
+  const MACHINES=['Haul truck','Excavator','Dozer','Grader','Loader','Water cart',
+                  'Drill','Scraper','Service truck','Light vehicle','Dragline','Float'];
+  let myMachines={};
+  let multi=true;
+  let tickets=[
+    {n:'Site induction',     d:''},
+    {n:'Medical',            d:''},
+    {n:'Licence',            d:''},
+    {n:'First aid & CPR',    d:''}
+  ];
+  let docFilterMachine=null;
+
+  function setSkillMode(isMulti){
+    multi=isMulti;
+    $('skMulti').setAttribute('aria-pressed',isMulti);
+    $('skSingle').setAttribute('aria-pressed',!isMulti);
+    $('skHint').textContent=isMulti
+      ? 'Tap everything you are signed off on. Multi skilled means you get moved around, so the app keeps hours separately for each machine.'
+      : 'Pick the one machine you run. Everything else stays out of your way.';
+    if(!isMulti){
+      const keep=Object.keys(myMachines)[0];
+      myMachines = keep ? {[keep]:myMachines[keep]} : {};
+    }
+    renderSkills();
+  }
+  function renderMachines(){
+    const box=$('machines');box.innerHTML='';
+    MACHINES.forEach(m=>{
+      const b=document.createElement('button');
+      b.className='mach';b.textContent=m;
+      b.setAttribute('aria-pressed', m in myMachines);
+      b.addEventListener('click',()=>{
+        if(m in myMachines){delete myMachines[m];}
+        else{ if(!multi) myMachines={}; myMachines[m]=0; }
+        renderSkills();
+      });
+      box.appendChild(b);
+    });
+  }
+  function renderHours(){
+    const box=$('hoursList');box.innerHTML='';
+    const keys=Object.keys(myMachines);
+    if(!keys.length){box.innerHTML='<div class="empty">Pick a machine above and its hours show up here.</div>';return}
+    keys.forEach(m=>{
+      const row=document.createElement('div');
+      row.className='hourRow';
+      row.innerHTML='<span class="mn">'+m+'</span>'+
+        '<input type="number" step="50" value="'+myMachines[m]+'" data-m="'+m+'">'+
+        '<span class="hu">hrs</span>';
+      row.querySelector('input').addEventListener('input',e=>{
+        myMachines[m]=+e.target.value||0;renderProfile();
+      });
+      box.appendChild(row);
+    });
+  }
+  function ticketState(dstr){
+    if(!dstr) return {cls:'warn',txt:'no date set',days:null};
+    const v=dstr.split('-').map(Number);
+    const d=new Date(v[0],v[1]-1,v[2]);
+    const days=Math.round((d-today())/dayMs);
+    if(days<0)  return {cls:'exp', txt:'expired '+Math.abs(days)+' days ago',days};
+    if(days<=60)return {cls:'warn',txt:'due in '+days+' days',days};
+    return {cls:'ok',txt:'current · '+days+' days left',days};
+  }
+  function renderTickets(){
+    const box=$('ticketList');box.innerHTML='';
+    tickets.forEach((t,i)=>{
+      const st=ticketState(t.d);
+      const row=document.createElement('div');
+      row.className='tick';
+      row.innerHTML='<div class="tn2">'+t.n+'<div class="td '+st.cls+'">'+st.txt+'</div></div>'+
+        '<input type="date" value="'+t.d+'" data-i="'+i+'">';
+      row.querySelector('input').addEventListener('input',e=>{
+        tickets[+e.target.dataset.i].d=e.target.value;renderTickets();renderProfile();
+      });
+      box.appendChild(row);
+    });
+  }
+  $('addTicket').addEventListener('click',()=>{
+    const n=prompt('What ticket or medical?');
+    if(n){tickets.push({n:n,d:''});renderTickets();renderProfile();}
   });
-  $('wizBack').style.visibility = step === 1 ? 'hidden' : 'visible';
-  $('wizNext').textContent = step === 5 ? 'Start' : 'Next';
-}
-function wizBuild(){
-  $('wRoster').innerHTML = PRESETS.map(function(p){
-    return '<button class="pill ' + (S.roster === p.id ? 'on' : '') + '" data-r="' + p.id + '">' + p.label + '</button>';
-  }).join('');
-  Array.prototype.forEach.call($('wRoster').querySelectorAll('.pill'), function(b){
-    b.onclick = function(){
-      var id = b.getAttribute('data-r');
-      S.roster = id;
-      var p = PRESETS.filter(function(x){ return x.id === id; })[0];
-      if(id !== 'custom'){ S.on = p.on; S.off = p.off; }
-      $('wCustom').hidden = (id !== 'custom');
-      wizBuild();
+  function renderProfile(){
+    const keys=Object.keys(myMachines);
+    const total=keys.reduce((a,k)=>a+myMachines[k],0);
+    const machTxt=keys.length
+      ? keys.map(k=>'<b>'+k+'</b> '+myMachines[k].toLocaleString('en-AU')+' hrs').join(' · ')
+      : 'No machines selected yet.';
+    const bad=tickets.filter(t=>['exp','warn'].includes(ticketState(t.d).cls));
+    const current=tickets.filter(t=>ticketState(t.d).cls==='ok').length;
+    let s2='<b>'+(multi?'Multi skilled operator':'Operator')+'</b><br>'+machTxt;
+    if(keys.length) s2+='<br><br><b>'+total.toLocaleString('en-AU')+'</b> total seat hours across '+keys.length+' machine'+(keys.length>1?'s':'');
+    s2+='<br>'+current+' of '+tickets.length+' tickets current';
+    if(bad.length) s2+=' — <b>'+bad.map(t=>t.n).join(', ')+'</b> '+(bad.length>1?'need':'needs')+' attention';
+    $('profileOut').innerHTML=s2;
+  }
+  $('copyProfile').addEventListener('click',()=>{
+    const txt=$('profileOut').innerText;
+    navigator.clipboard&&navigator.clipboard.writeText(txt);
+    $('copyProfile').textContent='Copied';
+    setTimeout(()=>$('copyProfile').textContent='Copy to clipboard',1600);
+  });
+  function renderDocFilter(){
+    const box=$('docFilter');if(!box)return;box.innerHTML='';
+    const keys=Object.keys(myMachines);
+    if(!keys.length){box.innerHTML='<span class="fmeta">Add machines on the Skills tab to filter by them.</span>';return}
+    const all=document.createElement('button');
+    all.className='mach';all.textContent='All';all.setAttribute('aria-pressed',docFilterMachine===null);
+    all.addEventListener('click',()=>{docFilterMachine=null;renderDocFilter();renderDocs()});
+    box.appendChild(all);
+    keys.forEach(m=>{
+      const b=document.createElement('button');
+      b.className='mach';b.textContent=m;b.setAttribute('aria-pressed',docFilterMachine===m);
+      b.addEventListener('click',()=>{docFilterMachine=(docFilterMachine===m?null:m);renderDocFilter();renderDocs()});
+      box.appendChild(b);
+    });
+  }
+  function renderSkills(){renderMachines();renderHours();renderTickets();renderProfile();renderDocFilter();renderDocs()}
+  $('skMulti').addEventListener('click',()=>setSkillMode(true));
+  $('skSingle').addEventListener('click',()=>setSkillMode(false));
+
+  $('fileIn').addEventListener('change',e=>{
+    const keys=Object.keys(myMachines);
+    [...e.target.files].forEach(f=>docs.push({name:f.name,size:f.size,url:URL.createObjectURL(f),
+      machine:keys.length?(docFilterMachine||keys[0]):null}));
+    renderDocs();e.target.value='';
+  });
+  function renderDocs(){
+    const ul=$('docList');ul.innerHTML='';
+    const shown=docs.filter(d=>!docFilterMachine||d.machine===docFilterMachine);
+    $('docEmpty').style.display=shown.length?'none':'block';
+    $('docEmpty').textContent=docs.length?'Nothing tagged to that machine.':'Nothing loaded yet.';
+    shown.forEach(d=>{
+      const li=document.createElement('li');
+      li.innerHTML='<span class="fname">'+d.name+
+        (d.machine?'<div class="fmeta">'+d.machine+'</div>':'')+'</span><span class="fmeta">'+
+        (d.size>1048576?(d.size/1048576).toFixed(1)+' MB':Math.round(d.size/1024)+' KB')+
+        '</span><a class="open" href="'+d.url+'" target="_blank" rel="noopener">Open</a>';
+      ul.appendChild(li);
+    });
+  }
+
+  function renderAll(){drawRing();renderCore();renderPresets();renderChips();renderUpcoming();renderPay();renderSwipes();renderFatigue();renderAnchorCheck();renderPhoto();renderAwake();renderSite();renderPackage()}
+
+  if($('nudgeBack')) $('nudgeBack').addEventListener('click',()=>shiftAnchor(-1));
+  if($('nudgeFwd'))  $('nudgeFwd').addEventListener('click',()=>shiftAnchor(1));
+  $('addDay').addEventListener('click',()=>{pattern.push('O');presetIdx=-1;swipes=null;renderAll()});
+  $('delDay').addEventListener('click',()=>{if(pattern.length>2){pattern.pop();presetIdx=-1;swipes=null;renderAll()}});
+  $('segCasual').addEventListener('click',()=>setEmployment(true));
+  $('segPerm').addEventListener('click',()=>setEmployment(false));
+  ['anchor','rate','hours','superRate','alWeeks','km','startDate'].forEach(id=>
+    $(id).addEventListener('input',()=>{swipes=null;renderAll()}));
+  $('slip').addEventListener('input',checkSlip);
+  ['wokeTime','wokeDay'].forEach(id=>$(id).addEventListener('input',()=>{renderAwake();save&&save()}));
+  $('annualIn').addEventListener('input',()=>{renderPackage();save&&save()});
+  setInterval(renderAwake, 60000);
+
+  renderSetupPresets();renderThemes();showStep(0);
+
+
+  /* ================= FATIGUE ================= */
+  function renderFatigue(){
+    const t=today(), i=idxFor(t);
+    const cur=pattern[i], nxt=pattern[(i+1)%pattern.length];
+    // last night of a block: on nights today, and tomorrow is not a shift
+    const lastNight = cur==='N' && (nxt==='O'||nxt==='T');
+    $('fatigue').classList.toggle('hide', !lastNight);
+  }
+
+  /* ================= ANCHOR CHECK & NUDGE ================= */
+  function shiftAnchor(days){
+    const v=$('anchor').value.split('-').map(Number);
+    const d=new Date(v[0],v[1]-1,v[2]+days);
+    $('anchor').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    swipes=null;renderAll();save&&save();
+  }
+  function renderAnchorCheck(){
+    const i=idxFor(today());
+    const el=$('anchorCheck');
+    if(el) el.innerHTML='That puts today on <b>'+NAME[pattern[i]].toLowerCase()+
+      '</b> &mdash; day '+(i+1)+' of '+pattern.length+'.';
+    const el2=$('sAnchorCheck');
+    if(el2) el2.innerHTML='That puts today on <b>'+NAME[pattern[i]].toLowerCase()+'</b>.';
+  }
+
+  /* ================= SHARE ================= */
+  function rosterText(){
+    const t=today();let runs=[],run=null;
+    for(let k=0;k<42;k++){
+      const d=new Date(t.getTime()+k*dayMs),ty=pattern[idxFor(d)];
+      if(run&&run.type===ty){run.end=d;continue}
+      if(run)runs.push(run);run={type:ty,start:d,end:d};
+    }
+    if(run)runs.push(run);
+    const line=r=>{
+      const a=r.start.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+      const b=r.end.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+      const when=(+r.start===+r.end)?a:a+' to '+b;
+      const what={D:'Day shift',N:'Night shift',T:'Travelling',O:'HOME'}[r.type];
+      return when+' — '+what;
     };
-  });
-  $('wTheme').innerHTML = THEMES.map(function(t){
-    return '<button class="pill ' + (S.theme === t.id ? 'on' : '') + '" data-th="' + t.id + '">' + t.label + '</button>';
-  }).join('');
-  Array.prototype.forEach.call($('wTheme').querySelectorAll('.pill'), function(b){
-    b.onclick = function(){
-      S.theme = b.getAttribute('data-th');
-      document.documentElement.setAttribute('data-theme', S.theme);
-      wizBuild();
-    };
-  });
-  Array.prototype.forEach.call($('wEmp').querySelectorAll('.pill'), function(b){
-    b.className = 'pill' + (S.emp === b.getAttribute('data-v') ? ' on' : '');
-    b.onclick = function(){ S.emp = b.getAttribute('data-v'); wizBuild(); };
-  });
-  $('wName').value = S.name; $('wSite').value = S.site;
-  $('wOn').value = S.on; $('wOff').value = S.off;
-  $('wStart').value = S.start || iso(new Date());
-  $('wTravel').checked = !!S.travel;
-  $('wRate').value = S.rate || ''; $('wHrs').value = S.hrs || 12;
-  $('wCustom').hidden = (S.roster !== 'custom');
-}
-$('wizNext').onclick = function(){
-  if(step === 1){ S.name = $('wName').value; S.site = $('wSite').value; }
-  if(step === 3){
-    if(S.roster === 'custom'){ S.on = +$('wOn').value || 7; S.off = +$('wOff').value || 7; }
-    S.start = $('wStart').value || iso(new Date());
-    S.travel = $('wTravel').checked;
+    return 'My roster, next six weeks\n\n'+runs.map(line).join('\n')+
+      '\n\nFrom The Ultimate Shift Engine';
   }
-  if(step === 4){ S.rate = +$('wRate').value || 0; S.hrs = +$('wHrs').value || 12; }
-  if(step === 5){
-    S.setup = true; save(); $('wiz').classList.remove('on'); renderAll(); return;
+  function shareUrl(){
+    const payload={p:pattern.join(''),a:$('anchor').value};
+    return location.href.split('#')[0]+'#r='+btoa(JSON.stringify(payload));
   }
-  step++; wizShow();
-};
-$('wizBack').onclick = function(){ if(step > 1){ step--; wizShow(); } };
-$('btnSetup').onclick = function(){ step = 1; wizBuild(); wizShow(); $('wiz').classList.add('on'); };
+  function flash(msg){ $('shareMsg').textContent=msg; setTimeout(()=>$('shareMsg').textContent='',2600); }
+  if($('shareLink')) $('shareLink').addEventListener('click',async()=>{
+    const url=shareUrl();
+    try{
+      if(navigator.share){ await navigator.share({title:'My roster',text:'My roster — dates on and dates home.',url}); return; }
+      await navigator.clipboard.writeText(url); flash('Link copied. Paste it to whoever needs it.');
+    }catch(e){ flash('Couldn\u2019t share here — try Copy as a message instead.'); }
+  });
+  if($('shareText')) $('shareText').addEventListener('click',async()=>{
+    try{ await navigator.clipboard.writeText(rosterText()); flash('Copied. Paste it into a message.'); }
+    catch(e){ flash('Couldn\u2019t copy here.'); }
+  });
 
-/* ---------- boot ---------- */
-function renderAll(){
-  document.documentElement.setAttribute('data-theme', S.theme || '');
-  renderRoster(); paintPhoto(); renderPay(); renderLog(); renderSkills(); renderDocs();
-}
-if(!S.setup){ wizBuild(); wizShow(); $('wiz').classList.add('on'); }
-renderAll();
+  /* ================= VIEW MODE ================= */
+  function tryViewMode(){
+    if(!location.hash.startsWith('#r=')) return false;
+    let d; try{ d=JSON.parse(atob(location.hash.slice(3))); }catch(e){ return false; }
+    if(!d||!d.p) return false;
+    pattern=d.p.split(''); presetIdx=-1;
+    if(d.a) $('anchor').value=d.a;
+    document.body.classList.add('viewmode');
+    $('setup').classList.add('hide');
+    $('viewBanner').style.display='block';
+    $('viewBanner').innerHTML='<b>Shared roster.</b> This stays right on its own as the cycle rolls over &mdash; no need to ask again.';
+    renderAll();
+    return true;
+  }
+
+
+  /* ================= CENTRE PHOTO ================= */
+  let photoData=null;
+  function renderPhoto(){
+    const w=$('photoWrap'), img=$('corePhoto'), core=$('core');
+    if(photoData){ img.src=photoData; w.style.display='flex'; core.classList.add('hasPhoto');
+      $('photoClear').style.display='block'; }
+    else { w.style.display='none'; core.classList.remove('hasPhoto');
+      $('photoClear').style.display='none'; }
+  }
+  $('photoIn').addEventListener('change',e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      // downscale so it fits comfortably in storage
+      const im=new Image();
+      im.onload=()=>{
+        const S=220, c=document.createElement('canvas'); c.width=c.height=S;
+        const ctx=c.getContext('2d');
+        const side=Math.min(im.width,im.height);
+        ctx.drawImage(im,(im.width-side)/2,(im.height-side)/2,side,side,0,0,S,S);
+        photoData=c.toDataURL('image/jpeg',0.72);
+        renderPhoto(); save&&save();
+      };
+      im.src=r.result;
+    };
+    r.readAsDataURL(f); e.target.value='';
+  });
+  $('photoClear').addEventListener('click',()=>{photoData=null;renderPhoto();save&&save();});
+
+  /* ================= TIME AWAKE ================= */
+  function renderAwake(){
+    const t=$('wokeTime').value.split(':').map(Number);
+    const back=+$('wokeDay').value;
+    const now=new Date();
+    const woke=new Date(now.getFullYear(),now.getMonth(),now.getDate()-back,t[0],t[1]);
+    let hrs=(now-woke)/3600000;
+    if(hrs<0) hrs+=24;
+    $('awakeHrs').textContent=hrs.toFixed(1);
+    const pct=Math.max(0,Math.min(100,hrs/28*100));
+    const bar=$('awakeBar');
+    bar.style.width=pct.toFixed(1)+'%';
+    let col,txt;
+    if(hrs<13){ col='var(--good)';
+      txt='<b>You\u2019re alright.</b> Normal waking hours. Still worth a break every couple of hours on a long drive.'; }
+    else if(hrs<17){ col='var(--day)';
+      txt='<b>Getting there.</b> You\u2019re past a normal day. Reactions are starting to slide even though you won\u2019t feel it much yet.'; }
+    else if(hrs<21){ col='#FF8C42';
+      txt='<b>About the same as 0.05.</b> That\u2019s over the limit for a provisional driver. If you\u2019re about to drive home, sleep first \u2014 even a few hours.'; }
+    else if(hrs<25){ col='var(--bad)';
+      txt='<b>Around 0.08 to 0.10.</b> This is where microsleeps start, and you don\u2019t get a warning before one. Do not drive. Get a bed, or get a lift.'; }
+    else { col='var(--bad)';
+      txt='<b>Well past 0.10 equivalent.</b> You are not fit to drive and probably not fit to judge whether you are. Sleep now.'; }
+    bar.style.background=col;
+    $('awakeVerdict').innerHTML=txt;
+  }
+
+  /* ================= SITE HOURS + PACKAGE ================= */
+  function renderSite(){
+    const hrs=+$('hours').value||0;
+    const shifts=pattern.filter(t=>t==='D'||t==='N').length;
+    const nights=pattern.filter(t=>t==='N').length;
+    const cyclesYr=365.25/pattern.length;
+    const yrHours=shifts*hrs*cyclesYr;
+    const yrNights=Math.round((nights+pattern.filter(t=>t==='T').length)*cyclesYr);
+    $('siteHrs').textContent=Math.round(yrHours).toLocaleString('en-AU');
+    $('siteHrsNote').textContent=Math.round(shifts*hrs)+' hrs a cycle · '+Math.round(shifts*cyclesYr)+' shifts';
+    $('siteNights').textContent=yrNights.toLocaleString('en-AU');
+  }
+  function renderPackage(){
+    const pkg=+$('annualIn').value||0;
+    const hrs=+$('hours').value||0;
+    const shifts=pattern.filter(t=>t==='D'||t==='N').length;
+    const cyclesYr=365.25/pattern.length;
+    const yrHours=shifts*hrs*cyclesYr;
+    if(pkg>0 && yrHours>0){
+      const eff=pkg/yrHours;
+      $('annualNote').innerHTML='On a package of '+money(pkg)+' across '+Math.round(yrHours).toLocaleString('en-AU')+
+        ' hours, you\u2019re effectively on <b style="color:var(--text)">'+money2(eff)+' an hour</b>. '+
+        (eff < (+$('rate').value||0) ? 'That\u2019s below your hourly rate.' : 'That\u2019s above your hourly rate.');
+    } else {
+      $('annualNote').textContent='Salaried instead of hourly? Put the package in and it works out what you\u2019re really earning an hour on this roster.';
+    }
+  }
+
+  /* ---- blank dates default to today ---- */
+  (function seedDates(){
+    const d=new Date();
+    const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    ['anchor','startDate','sAnchor','sStart'].forEach(id=>{ if($(id)&&!$(id).value) $(id).value=iso; });
+  })();
+
+  /* ================= SAVING ================= */
+  const KEY='ultimate-shift-engine.v1';
+  let ready=false;
+  function snapshot(){
+    return {
+      pattern:pattern.join(''), presetIdx, casual, multi, themeIdx,
+      anchor:$('anchor').value, startDate:$('startDate').value,
+      rate:$('rate').value, hours:$('hours').value, superRate:$('superRate').value,
+      alWeeks:$('alWeeks').value, km:$('km').value,
+      depTime:$('depTime').value, campTime:$('campTime').value,
+      machines:myMachines, tickets, photoData,
+      wokeTime:$('wokeTime').value, wokeDay:$('wokeDay').value, annualIn:$('annualIn').value
+    };
+  }
+  function save(){
+    if(!ready) return;
+    try{ localStorage.setItem(KEY, JSON.stringify(snapshot()));
+         $('saveState').textContent='Saved on this device.'; }
+    catch(e){ $('saveState').textContent='Storage is blocked here — settings will reset on reload. Works normally once the app is hosted on a real address.'; }
+  }
+  function load(){
+    let raw=null;
+    try{ raw=localStorage.getItem(KEY); }catch(e){ return false; }
+    if(!raw) return false;
+    let d; try{ d=JSON.parse(raw); }catch(e){ return false; }
+    if(d.pattern) pattern=d.pattern.split('');
+    if(typeof d.presetIdx==='number') presetIdx=d.presetIdx;
+    if(d.machines) myMachines=d.machines;
+    if(Array.isArray(d.tickets)&&d.tickets.length) tickets=d.tickets;
+    ['anchor','startDate','rate','hours','superRate','alWeeks','km','depTime','campTime','wokeTime','wokeDay','annualIn']
+      .forEach(k=>{ if(d[k]!==undefined&&$(k)) $(k).value=d[k]; });
+    if(d.photoData) photoData=d.photoData;
+    if(typeof d.themeIdx==='number') applyTheme(d.themeIdx);
+    setEmployment(d.casual!==false);
+    setSkillMode(d.multi!==false);
+    return true;
+  }
+  $('resetAll').addEventListener('click',()=>{
+    if(!confirm('Clear everything and run setup again?')) return;
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    location.reload();
+  });
+
+  /* ================= BOOT ================= */
+  const viewing = tryViewMode();
+  const restored = viewing ? true : load();
+  if(viewing){
+    ready=true;
+  }else if(restored){
+    $('setup').classList.add('hide');
+    renderAll();
+    $('saveState').textContent='Saved on this device.';
+  }else{
+    setEmployment(true); renderAll(); setSkillMode(true);
+    $('saveState').textContent='Nothing saved yet — finish setup and it sticks.';
+  }
+  ready=true;
+
+  // save on any change
+  document.addEventListener('input', save, true);
+  document.addEventListener('click', ()=>setTimeout(save,60), true);
+
+  // offline support once hosted
+  if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+
+})();
 </script>
-</body>
-</html>
