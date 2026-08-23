@@ -1,0 +1,25 @@
+{
+  "name": "The Ultimate Shift Engine",
+  "short_name": "Shift Engine",
+  "description": "Roster, pay and skills for shift workers whose roster isn't a week.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0C0A14",
+  "theme_color": "#0C0A14",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
