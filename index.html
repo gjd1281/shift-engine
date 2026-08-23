@@ -1,124 +1,764 @@
-<!-- ===== PERSONAL PHOTO IN THE WHEEL + BUILD STAMP — paste before </body> ===== -->
-<!--
-  ONE THING TO CHANGE: the BUILD line below (search for "v1").
-  Bump it every time you push. Open the site in a private tab —
-  if the stamp bottom-right shows the new number, your change is live.
-  If it shows the old number, you're looking at a cached copy.
--->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>The Ultimate Shift Engine</title>
 <style>
-  .se-hubwrap{position:relative}
-  .se-hubwrap > svg, .se-hubwrap > canvas{position:relative;z-index:2}
-  .se-hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    border-radius:50%;overflow:hidden;z-index:1;background:#1d1730;
-    box-shadow:0 0 0 2px rgba(255,176,32,.45)}
-  .se-hub.empty{box-shadow:0 0 0 1px rgba(156,147,184,.35)}
-  .se-hub img{width:100%;height:100%;object-fit:cover;display:block}
-  .se-hub .scrim{position:absolute;inset:0;
-    background:radial-gradient(circle at 50% 50%,rgba(10,8,18,.72) 0%,rgba(10,8,18,.5) 55%,rgba(10,8,18,.72) 100%)}
-  .se-hub .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    font-family:ui-monospace,Menlo,monospace;font-size:10px;letter-spacing:.16em;color:#9C93B8;text-transform:uppercase}
-  .se-photobtns{display:flex;gap:10px;justify-content:center;margin:10px 0 0}
-  .se-photobtns button{background:#211a33;border:1px solid #332a4a;border-radius:999px;padding:9px 16px;
-    color:#9C93B8;font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.1em;
-    text-transform:uppercase;cursor:pointer}
+/* ============ THEMES ============ */
+:root{
+  --bg:#14101f; --panel:#1d1730; --line:#332a4a; --text:#EDE9F7; --dim:#9C93B8;
+  --accent:#FFB020; --work:#FFB020; --home:#4ED8A0; --travel:#7BA7FF;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+[data-theme="hivis"]{--bg:#0B0B0C;--panel:#161618;--line:#2A2A2E;--text:#F2F2F2;--dim:#8E8E95;--accent:#D6FF3D;--work:#D6FF3D;--home:#38C7C7;--travel:#FF8A3D}
+[data-theme="coal"]{--bg:#17181A;--panel:#212328;--line:#33363D;--text:#ECEDEF;--dim:#8C919B;--accent:#FF7A2F;--work:#FF7A2F;--home:#5FD0A6;--travel:#82A8FF}
+[data-theme="steel"]{--bg:#0C1622;--panel:#152232;--line:#243447;--text:#E6EFF9;--dim:#8199B3;--accent:#3FD0E8;--work:#3FD0E8;--home:#5AE0A8;--travel:#FFC24D}
+[data-theme="dust"]{--bg:#1B1613;--panel:#26201B;--line:#3B3128;--text:#F2EAE0;--dim:#A89684;--accent:#E8A44C;--work:#E8A44C;--home:#8FBF7A;--travel:#C98FD6}
+[data-theme="daylight"]{--bg:#F4F2EE;--panel:#FFFFFF;--line:#DFD9CF;--text:#1E1A16;--dim:#6E665C;--accent:#C25B2B;--work:#C25B2B;--home:#2E8A63;--travel:#3B6BB5}
+[data-theme="ink"]{--bg:#0F1113;--panel:#191C20;--line:#2A2F35;--text:#E8ECF1;--dim:#89929D;--accent:#F2F2F2;--work:#F2F2F2;--home:#6FCF97;--travel:#6FA8DC}
 
-  /* build stamp — same palette as the wheel hub */
-  .se-build{position:fixed;bottom:6px;right:8px;z-index:9999;pointer-events:none;
-    background:#1d1730;border:1px solid rgba(255,176,32,.45);border-radius:999px;
-    padding:4px 10px;font-family:ui-monospace,Menlo,monospace;font-size:10px;
-    letter-spacing:.14em;color:#FFB020;text-transform:uppercase}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans)}
+body{padding-bottom:78px}
+h1,h2,h3{margin:0 0 8px}
+button{font-family:var(--mono);cursor:pointer}
+input,select,textarea{font-family:var(--sans);font-size:16px}
+
+.wrap{max-width:560px;margin:0 auto;padding:14px}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:10px;align-items:center}
+.row.between{justify-content:space-between}
+label.f{display:block;margin:10px 0 0}
+label.f span{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{
+  width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;
+  padding:11px;color:var(--text)}
+textarea{min-height:70px;resize:vertical}
+.btn{background:var(--accent);color:#12101a;border:0;border-radius:999px;padding:12px 20px;
+  font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
+.btn.wide{width:100%}
+.pillrow{display:flex;flex-wrap:wrap;gap:8px}
+.pill{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:9px 14px;
+  color:var(--dim);font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.pill.on{border-color:var(--accent);color:var(--accent)}
+.big{font-family:var(--mono);font-size:30px;letter-spacing:-.02em;color:var(--accent)}
+.dim{color:var(--dim)}
+.mono{font-family:var(--mono)}
+.small{font-size:12px}
+.hr{height:1px;background:var(--line);margin:12px 0}
+.warn{font-size:11px;color:var(--dim);line-height:1.5;margin-top:8px}
+
+/* ============ WHEEL ============ */
+.hubwrap{position:relative;margin:4px auto 0;max-width:360px}
+.hubwrap > svg{position:relative;z-index:2;width:100%;height:auto;display:block}
+.hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;
+  overflow:hidden;z-index:1;background:var(--panel);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 45%,transparent)}
+.hub.empty{box-shadow:0 0 0 1px var(--line)}
+.hub img{width:100%;height:100%;object-fit:cover;display:block}
+.hub .scrim{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,
+  color-mix(in srgb,var(--bg) 72%,transparent) 0%,color-mix(in srgb,var(--bg) 45%,transparent) 55%,
+  color-mix(in srgb,var(--bg) 72%,transparent) 100%)}
+.hub .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+.hubcap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;
+  text-align:center;pointer-events:none;font-family:var(--mono)}
+.hubcap .t{font-size:9px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
+.hubcap .n{font-size:22px;color:var(--text);margin-top:2px}
+
+/* ============ TABS ============ */
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:50;display:flex;
+  background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{flex:1;background:none;border:0;padding:12px 4px 14px;color:var(--dim);
+  font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+nav.tabs button.on{color:var(--accent)}
+nav.tabs button .ic{display:block;font-size:16px;margin-bottom:3px}
+.tab{display:none}
+.tab.on{display:block}
+
+/* ============ WIZARD ============ */
+.wiz{position:fixed;inset:0;z-index:100;background:var(--bg);overflow:auto;display:none}
+.wiz.on{display:block}
+.steps{display:flex;gap:6px;margin-bottom:16px}
+.steps i{flex:1;height:3px;background:var(--line);border-radius:2px}
+.steps i.on{background:var(--accent)}
+
+/* ============ LISTS ============ */
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:11px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item .x{background:none;border:0;color:var(--dim);font-size:18px;padding:0 4px}
+.tick{display:flex;align-items:center;gap:8px;margin-top:8px}
+.tick img{width:42px;height:42px;object-fit:cover;border-radius:7px;border:1px solid var(--line)}
+
+/* ============ BUILD STAMP ============ */
+.build{position:fixed;bottom:84px;right:8px;z-index:60;pointer-events:none;
+  background:var(--panel);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
+  border-radius:999px;padding:3px 9px;font-family:var(--mono);font-size:9px;
+  letter-spacing:.14em;color:var(--accent);text-transform:uppercase;opacity:.85}
 </style>
+</head>
+<body>
 
-<div class="se-build" id="seBuild">v1</div>
+<div class="build" id="buildStamp">v1</div>
+
+<!-- ================= SETUP WIZARD ================= -->
+<div class="wiz" id="wiz">
+  <div class="wrap">
+    <div class="steps" id="wizSteps"><i></i><i></i><i></i><i></i><i></i></div>
+
+    <div class="wizstep" data-s="1">
+      <div class="eyebrow">Step 1 of 5</div>
+      <h2>Who's driving?</h2>
+      <p class="dim small">Used on your operator profile when you share it.</p>
+      <label class="f"><span>Name</span><input type="text" id="wName" placeholder="Gavin Duffy"></label>
+      <label class="f"><span>Site / mine</span><input type="text" id="wSite" placeholder="Callide"></label>
+    </div>
+
+    <div class="wizstep" data-s="2" hidden>
+      <div class="eyebrow">Step 2 of 5</div>
+      <h2>How are you employed?</h2>
+      <p class="dim small">Sets whether the Pay tab uses casual loading or accrues leave.</p>
+      <div class="pillrow" id="wEmp" style="margin-top:12px">
+        <button class="pill" data-v="casual">Casual</button>
+        <button class="pill" data-v="permanent">Permanent</button>
+      </div>
+    </div>
+
+    <div class="wizstep" data-s="3" hidden>
+      <div class="eyebrow">Step 3 of 5</div>
+      <h2>Pick your roster</h2>
+      <div class="pillrow" id="wRoster" style="margin-top:12px"></div>
+      <div id="wCustom" hidden>
+        <div class="row" style="gap:10px">
+          <label class="f" style="flex:1"><span>Days on</span><input type="number" id="wOn" value="7" min="1"></label>
+          <label class="f" style="flex:1"><span>Days home</span><input type="number" id="wOff" value="7" min="1"></label>
+        </div>
+      </div>
+      <label class="f"><span>First day of your next swing</span><input type="date" id="wStart"></label>
+      <div class="row" style="margin-top:12px;gap:8px">
+        <input type="checkbox" id="wTravel" checked style="width:auto">
+        <label for="wTravel" class="small dim" style="margin:0">Mark travel days (T) — they sit inside the break</label>
+      </div>
+    </div>
+
+    <div class="wizstep" data-s="4" hidden>
+      <div class="eyebrow">Step 4 of 5</div>
+      <h2>What are you earning?</h2>
+      <p class="dim small">Rough numbers are fine — change them any time in Pay.</p>
+      <label class="f"><span>Base rate ($/hr)</span><input type="number" id="wRate" step="0.01" placeholder="52.00"></label>
+      <label class="f"><span>Hours per shift</span><input type="number" id="wHrs" step="0.5" value="12"></label>
+    </div>
+
+    <div class="wizstep" data-s="5" hidden>
+      <div class="eyebrow">Step 5 of 5</div>
+      <h2>Pick a colour</h2>
+      <div class="pillrow" id="wTheme" style="margin-top:12px"></div>
+      <p class="warn">Everything saves on this device. Nothing is sent anywhere.</p>
+    </div>
+
+    <div class="row between" style="margin-top:22px">
+      <button class="btn ghost" id="wizBack">Back</button>
+      <button class="btn" id="wizNext">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ROSTER ================= -->
+<section class="tab on" id="tab-roster">
+  <div class="wrap">
+    <div class="row between">
+      <div>
+        <div class="eyebrow">Shift Engine</div>
+        <h1 id="rHead" style="font-size:20px">Roster</h1>
+      </div>
+      <button class="btn ghost" id="btnSetup">Setup</button>
+    </div>
+
+    <div class="card">
+      <div class="hubwrap" id="hubwrap">
+        <svg id="wheel" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="hub empty" id="hub"><div class="hint">Tap for<br>your photo</div></div>
+        <div class="hubcap" id="hubcap" hidden></div>
+      </div>
+      <div class="pillrow" style="justify-content:center;margin-top:12px">
+        <button class="pill" id="btnPhoto">Change photo</button>
+        <button class="pill" id="btnPhotoRm" hidden>Remove</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Right now</div>
+      <div class="big" id="rNow">—</div>
+      <div class="small dim" id="rNext" style="margin-top:6px"></div>
+      <div class="hr"></div>
+      <div class="row between small mono">
+        <span style="color:var(--work)">■ Work</span>
+        <span style="color:var(--home)">■ Home</span>
+        <span style="color:var(--travel)">■ Travel</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Next 14 days</div>
+      <div id="rList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PAY ================= -->
+<section class="tab" id="tab-pay">
+  <div class="wrap">
+    <div class="eyebrow">Shift Engine</div>
+    <h1 style="font-size:20px">Pay</h1>
+
+    <div class="card">
+      <div class="eyebrow">Estimate per swing</div>
+      <div class="big" id="pSwing">$0</div>
+      <div class="small dim" id="pBreak" style="margin-top:6px"></div>
+      <div class="hr"></div>
+      <div class="row between"><span class="small dim">Per fortnight</span><span class="mono" id="pFn">$0</span></div>
+      <div class="row between" style="margin-top:8px"><span class="small dim">Per year (rough)</span><span class="mono" id="pYr">$0</span></div>
+      <div class="row between" style="margin-top:8px" id="pLeaveRow"><span class="small dim">Annual leave accrued / swing</span><span class="mono" id="pLeave">—</span></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Your numbers</div>
+      <label class="f"><span>Base rate ($/hr)</span><input type="number" id="pRate" step="0.01"></label>
+      <label class="f"><span>Hours per shift</span><input type="number" id="pHrs" step="0.5"></label>
+      <label class="f"><span>Casual loading (%)</span><input type="number" id="pLoad" step="1"></label>
+      <label class="f"><span>Night / site allowance per shift ($)</span><input type="number" id="pAllow" step="0.01"></label>
+      <p class="warn">An estimate only — it doesn't know about tax, super, overtime bands or penalty rates. Your payslip is the real number; use this to spot when something looks off.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LOG ================= -->
+<section class="tab" id="tab-log">
+  <div class="wrap">
+    <div class="eyebrow">Shift Engine</div>
+    <h1 style="font-size:20px">Log</h1>
+
+    <div class="card">
+      <div class="eyebrow">Kilometres this financial year</div>
+      <div class="big" id="lKm">0 km</div>
+      <div class="small dim" id="lClaim" style="margin-top:6px"></div>
+      <label class="f"><span>Cents per km (check the current ATO rate)</span><input type="number" id="lRate" step="0.01" value="0.88"></label>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Add entry</div>
+      <label class="f"><span>Date</span><input type="date" id="lDate"></label>
+      <div class="row" style="gap:10px">
+        <label class="f" style="flex:1"><span>Km</span><input type="number" id="lKmIn" step="1" placeholder="310"></label>
+        <label class="f" style="flex:1"><span>Camp check-in</span><input type="time" id="lTime"></label>
+      </div>
+      <label class="f"><span>Note</span><input type="text" id="lNote" placeholder="Drive up — Biloela"></label>
+      <button class="btn wide" id="lAdd" style="margin-top:14px">Add to log</button>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Entries</div>
+      <div id="lList"><p class="dim small">Nothing logged yet.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SKILLS ================= -->
+<section class="tab" id="tab-skills">
+  <div class="wrap">
+    <div class="eyebrow">Shift Engine</div>
+    <h1 style="font-size:20px">Skills</h1>
+
+    <div class="card">
+      <div class="eyebrow">What do you run?</div>
+      <div class="pillrow" id="sMach" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Tickets</div>
+      <div id="sTickets"><p class="dim small">Pick a machine above, then attach its ticket.</p></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Resume</div>
+      <div id="sResume"><p class="dim small">No resume attached.</p></div>
+      <button class="btn ghost wide" id="sResumeAdd" style="margin-top:10px">Attach resume</button>
+      <button class="btn wide" id="sShare" style="margin-top:10px">Share operator profile</button>
+      <p class="warn">Share sends your profile text, and the resume file where your phone supports it. Tickets stay on the device.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DOCS ================= -->
+<section class="tab" id="tab-docs">
+  <div class="wrap">
+    <div class="eyebrow">Shift Engine</div>
+    <h1 style="font-size:20px">Docs</h1>
+
+    <div class="card">
+      <div class="eyebrow">Add a procedure</div>
+      <label class="f"><span>Title</span><input type="text" id="dTitle" placeholder="Excavator pre-start"></label>
+      <label class="f"><span>Link (optional)</span><input type="text" id="dLink" placeholder="https://…"></label>
+      <label class="f"><span>Notes</span><textarea id="dNote" placeholder="Steps, isolation points, anything you want on hand."></textarea></label>
+      <button class="btn wide" id="dAdd" style="margin-top:14px">Save procedure</button>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Saved</div>
+      <div id="dList"><p class="dim small">Nothing saved yet.</p></div>
+    </div>
+  </div>
+</section>
+
+<nav class="tabs" id="nav">
+  <button data-t="roster" class="on"><span class="ic">◎</span>Roster</button>
+  <button data-t="pay"><span class="ic">$</span>Pay</button>
+  <button data-t="log"><span class="ic">≡</span>Log</button>
+  <button data-t="skills"><span class="ic">★</span>Skills</button>
+  <button data-t="docs"><span class="ic">▤</span>Docs</button>
+</nav>
 
 <script>
-(function(){
-  /* ---------- BUILD STAMP ---------- */
-  var BUILD = "v1";                     /* <-- bump this every push: v2, v3, v4 ... */
-  var el = document.getElementById("seBuild");
-  if(el) el.textContent = BUILD;
-  console.log("SHIFT ENGINE BUILD:", BUILD);
+/* =========================================================
+   THE ULTIMATE SHIFT ENGINE
+   BUILD — bump this every time you push, then check the pill
+   bottom-right in a private tab. New number = live.
+   ========================================================= */
+var BUILD = "v1";
+document.getElementById('buildStamp').textContent = BUILD;
+console.log('SHIFT ENGINE BUILD:', BUILD);
 
-  /* ---------- PERSONAL PHOTO IN THE WHEEL ---------- */
-  /* --- if it grabs the wrong element, put your wheel's id here e.g. '#rosterWheel' --- */
-  var WHEEL   = document.querySelector('#wheel, #rosterWheel, .wheel, #tab-roster svg, section svg, svg');
-  var HUB_PCT = 0.56;   /* photo width as a share of the wheel — nudge to taste */
-  var KEY     = 'se_wheel_photo';
-  if(!WHEEL) return;
+/* ---------- storage (falls back to memory if blocked) ---------- */
+var KEY = 'se_state_v1', mem = {};
+function load(){
+  try{ var r = localStorage.getItem(KEY); return r ? JSON.parse(r) : null; }
+  catch(e){ return mem[KEY] || null; }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch(e){
+    mem[KEY] = S;
+    if(String(e).indexOf('uota') > -1) alert('Storage is full — remove a ticket photo or two.');
+  }
+}
 
-  var wrap = document.createElement('div');
-  wrap.className = 'se-hubwrap';
-  WHEEL.parentNode.insertBefore(wrap, WHEEL);
-  wrap.appendChild(WHEEL);
+var PRESETS = [
+  {id:'7/7',   label:'7 / 7',   on:7,  off:7},
+  {id:'8/6',   label:'8 / 6',   on:8,  off:6},
+  {id:'4/3',   label:'4 / 3',   on:4,  off:3},
+  {id:'5/2',   label:'5 / 2',   on:5,  off:2},
+  {id:'14/7',  label:'14 / 7',  on:14, off:7},
+  {id:'2/2/3', label:'2 / 2 / 3', on:2, off:2},
+  {id:'custom',label:'Custom',  on:7,  off:7}
+];
+var THEMES = [
+  {id:'',        label:'Amber'},
+  {id:'hivis',   label:'Hi-Vis'},
+  {id:'coal',    label:'Coal'},
+  {id:'steel',   label:'Steel'},
+  {id:'dust',    label:'Dust'},
+  {id:'daylight',label:'Daylight'}
+];
+var MACHINES = ['Excavator','Haul truck','Dozer','Grader','Loader','Water cart','Drill','Scraper','Service truck','Light vehicle'];
 
-  var hub = document.createElement('div');
-  hub.className = 'se-hub empty';
-  hub.innerHTML = '<div class="hint">Tap for your photo</div>';
-  wrap.appendChild(hub);
+var S = load() || {
+  setup:false, name:'', site:'', emp:'casual',
+  roster:'7/7', on:7, off:7, start:'', travel:true,
+  rate:0, hrs:12, load:25, allow:0,
+  theme:'', photo:'', kmRate:0.88,
+  log:[], machines:[], tickets:{}, resume:null, docs:[]
+};
 
-  var input = document.createElement('input');
-  input.type = 'file'; input.accept = 'image/*'; input.style.display = 'none';
-  document.body.appendChild(input);
+/* ---------- helpers ---------- */
+function $(id){ return document.getElementById(id); }
+function money(n){ return '$' + (Math.round(n)).toLocaleString(); }
+function iso(d){ return d.toISOString().slice(0,10); }
+function fromISO(s){ var p = s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
+function addDays(d,n){ var x = new Date(d.getTime()); x.setDate(x.getDate()+n); return x; }
+function midnight(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function fmt(d){ return d.toLocaleDateString([], {weekday:'short', day:'numeric', month:'short'}); }
 
-  var btns = document.createElement('div');
-  btns.className = 'se-photobtns';
-  btns.innerHTML = '<button type="button" data-a="add">Change photo</button>' +
-                   '<button type="button" data-a="rm">Remove</button>';
-  wrap.parentNode.insertBefore(btns, wrap.nextSibling);
-  btns.onclick = function(e){
-    var a = e.target.getAttribute('data-a');
-    if(a === 'add') input.click();
-    if(a === 'rm'){ try{ localStorage.removeItem(KEY); }catch(x){} paint(null); }
+/* cycle = array of 'W' | 'H' | 'T' — travel days sit inside the break */
+function cycle(){
+  var on = Math.max(1, +S.on || 1), off = Math.max(1, +S.off || 1), a = [];
+  for(var i=0;i<on;i++) a.push('W');
+  for(var j=0;j<off;j++) a.push('H');
+  if(S.travel && off >= 2){ a[on] = 'T'; a[on+off-1] = 'T'; }
+  return a;
+}
+function dayType(date){
+  if(!S.start) return null;
+  var c = cycle();
+  var diff = Math.round((midnight(date) - midnight(fromISO(S.start))) / 86400000);
+  var i = ((diff % c.length) + c.length) % c.length;
+  return {type:c[i], index:i, len:c.length};
+}
+var LABEL = {W:'Work', H:'Home', T:'Travel'};
+var COLOR = {W:'var(--work)', H:'var(--home)', T:'var(--travel)'};
+
+/* ---------- roster wheel ---------- */
+function drawWheel(){
+  var svg = $('wheel'), c = cycle(), n = c.length;
+  if(!S.start){ svg.innerHTML = ''; return; }
+  var cx = 200, cy = 200, rOut = 190, rIn = 118, gap = 1.2, today = midnight(new Date());
+  var startDate = fromISO(S.start);
+  var diff = Math.round((today - midnight(startDate)) / 86400000);
+  var todayIdx = ((diff % n) + n) % n;
+  var cycleStart = addDays(today, -todayIdx);
+  var out = '';
+
+  for(var i=0;i<n;i++){
+    var a0 = (i / n) * 360 - 90 + gap, a1 = ((i+1) / n) * 360 - 90 - gap;
+    var d = arc(cx, cy, rOut, rIn, a0, a1);
+    var t = c[i], isToday = (i === todayIdx);
+    var date = addDays(cycleStart, i);
+    out += '<path d="' + d + '" fill="' + COLOR[t] + '" opacity="' + (isToday ? 1 : .34) + '"></path>';
+    if(isToday) out += '<path d="' + d + '" fill="none" stroke="var(--text)" stroke-width="2"></path>';
+
+    var mid = (a0 + a1) / 2, rad = (mid * Math.PI) / 180;
+    var lr = (rOut + rIn) / 2;
+    var lx = cx + lr * Math.cos(rad), ly = cy + lr * Math.sin(rad);
+    out += '<text x="' + lx + '" y="' + (ly - 3) + '" text-anchor="middle" font-family="' +
+           'ui-monospace,monospace" font-size="15" font-weight="700" fill="var(--bg)">' +
+           date.getDate() + '</text>';
+    out += '<text x="' + lx + '" y="' + (ly + 11) + '" text-anchor="middle" font-family="' +
+           'ui-monospace,monospace" font-size="8" letter-spacing="1" fill="var(--bg)">' +
+           (t === 'W' ? 'W' : t === 'T' ? 'T' : 'HOME') + '</text>';
+  }
+  svg.innerHTML = out;
+}
+function arc(cx, cy, rO, rI, a0, a1){
+  function pt(r,a){ var t=(a*Math.PI)/180; return [cx+r*Math.cos(t), cy+r*Math.sin(t)]; }
+  var p1=pt(rO,a0), p2=pt(rO,a1), p3=pt(rI,a1), p4=pt(rI,a0);
+  var big = (a1-a0) > 180 ? 1 : 0;
+  return 'M'+p1[0]+' '+p1[1]+' A'+rO+' '+rO+' 0 '+big+' 1 '+p2[0]+' '+p2[1]+
+         ' L'+p3[0]+' '+p3[1]+' A'+rI+' '+rI+' 0 '+big+' 0 '+p4[0]+' '+p4[1]+' Z';
+}
+
+/* ---------- roster tab ---------- */
+function renderRoster(){
+  $('rHead').textContent = S.name ? S.name.split(' ')[0] + "'s roster" : 'Roster';
+  drawWheel();
+  sizeHub();
+
+  var t = dayType(new Date());
+  if(!t){ $('rNow').textContent = '—'; $('rNext').textContent = 'Run Setup to start.'; return; }
+  $('rNow').textContent = LABEL[t.type];
+  $('rNow').style.color = COLOR[t.type];
+
+  var i = 1, next = null;
+  while(i < 60){
+    var d = addDays(new Date(), i), dt = dayType(d);
+    if(dt.type !== t.type){ next = {d:d, t:dt.type}; break; }
+    i++;
+  }
+  $('rNext').textContent = next
+    ? LABEL[next.t] + ' starts ' + fmt(next.d) + ' — ' + i + (i === 1 ? ' day' : ' days') + ' away'
+    : '';
+
+  var list = '';
+  for(var k=0;k<14;k++){
+    var dd = addDays(new Date(), k), ty = dayType(dd).type;
+    list += '<div class="item"><span class="small">' + (k === 0 ? 'Today · ' : '') + fmt(dd) + '</span>' +
+            '<span class="mono small" style="color:' + COLOR[ty] + '">' + LABEL[ty] + '</span></div>';
+  }
+  $('rList').innerHTML = list;
+}
+
+/* ---------- photo hub ---------- */
+var photoInput = document.createElement('input');
+photoInput.type = 'file'; photoInput.accept = 'image/*'; photoInput.style.display = 'none';
+document.body.appendChild(photoInput);
+
+function sizeHub(){
+  var w = $('hubwrap').clientWidth || 320;
+  var d = Math.round(w * 0.56);
+  $('hub').style.width = $('hub').style.height = d + 'px';
+}
+window.addEventListener('resize', function(){ sizeHub(); });
+
+function paintPhoto(){
+  var hub = $('hub');
+  if(S.photo){
+    hub.className = 'hub';
+    hub.innerHTML = '<img src="' + S.photo + '"><div class="scrim"></div>';
+    $('btnPhotoRm').hidden = false;
+  }else{
+    hub.className = 'hub empty';
+    hub.innerHTML = '<div class="hint">Tap for<br>your photo</div>';
+    $('btnPhotoRm').hidden = true;
+  }
+  sizeHub();
+}
+$('btnPhoto').onclick = function(){ photoInput.click(); };
+$('btnPhotoRm').onclick = function(){ S.photo = ''; save(); paintPhoto(); };
+$('hubwrap').addEventListener('click', function(e){
+  var r = $('hubwrap').getBoundingClientRect();
+  var dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2);
+  if(Math.sqrt(dx*dx + dy*dy) < (r.width * 0.56)/2) photoInput.click();
+});
+photoInput.onchange = function(){
+  squash(photoInput.files[0], 520, function(data){ S.photo = data; save(); paintPhoto(); });
+  photoInput.value = '';
+};
+function squash(file, out, cb){
+  if(!file) return;
+  var fr = new FileReader();
+  fr.onload = function(){
+    var im = new Image();
+    im.onload = function(){
+      var side = Math.min(im.width, im.height);
+      var c = document.createElement('canvas'); c.width = c.height = out;
+      c.getContext('2d').drawImage(im,(im.width-side)/2,(im.height-side)/2,side,side,0,0,out,out);
+      cb(c.toDataURL('image/jpeg', 0.78));
+    };
+    im.src = fr.result;
   };
+  fr.readAsDataURL(file);
+}
 
-  function size(){
-    var w = wrap.clientWidth || WHEEL.clientWidth;
-    var d = Math.round(w * HUB_PCT);
-    hub.style.width = hub.style.height = d + 'px';
+/* ---------- pay ---------- */
+function renderPay(){
+  $('pRate').value = S.rate || '';
+  $('pHrs').value  = S.hrs || '';
+  $('pLoad').value = S.load || 0;
+  $('pAllow').value= S.allow || 0;
+
+  var shifts = Math.max(1, +S.on || 1);
+  var hrs = (+S.hrs || 0) * shifts;
+  var rate = (+S.rate || 0) * (S.emp === 'casual' ? (1 + (+S.load || 0)/100) : 1);
+  var swing = hrs * rate + (+S.allow || 0) * shifts;
+  var cycleLen = cycle().length;
+
+  $('pSwing').textContent = money(swing);
+  $('pBreak').textContent = shifts + ' shifts × ' + (+S.hrs || 0) + ' hrs at ' +
+    (S.emp === 'casual' ? money(rate).replace('$','$') + '/hr incl. loading' : money(rate) + '/hr');
+  $('pFn').textContent = money(swing / cycleLen * 14);
+  $('pYr').textContent = money(swing / cycleLen * 365);
+
+  if(S.emp === 'permanent'){
+    $('pLeaveRow').hidden = false;
+    $('pLeave').textContent = (hrs * 0.0769).toFixed(1) + ' hrs';
+  }else{
+    $('pLeaveRow').hidden = true;
   }
-  window.addEventListener('resize', size);
+}
+['pRate','pHrs','pLoad','pAllow'].forEach(function(id){
+  $(id).addEventListener('input', function(){
+    S.rate = +$('pRate').value; S.hrs = +$('pHrs').value;
+    S.load = +$('pLoad').value; S.allow = +$('pAllow').value;
+    save(); renderPay();
+  });
+});
 
-  function paint(src){
-    if(src){
-      hub.className = 'se-hub';
-      hub.innerHTML = '<img src="' + src + '"><div class="scrim"></div>';
-    }else{
-      hub.className = 'se-hub empty';
-      hub.innerHTML = '<div class="hint">Tap for your photo</div>';
-    }
-    size();
-    btns.querySelector('[data-a="rm"]').style.display = src ? '' : 'none';
-  }
+/* ---------- log ---------- */
+function renderLog(){
+  $('lRate').value = S.kmRate;
+  var total = S.log.reduce(function(a,b){ return a + (+b.km || 0); }, 0);
+  $('lKm').textContent = total.toLocaleString() + ' km';
+  $('lClaim').textContent = 'About ' + money(total * (+S.kmRate || 0)) +
+    ' at ' + (+S.kmRate).toFixed(2) + '/km — confirm the rate and your logbook method with your accountant.';
+  if(!S.log.length){ $('lList').innerHTML = '<p class="dim small">Nothing logged yet.</p>'; return; }
+  $('lList').innerHTML = S.log.map(function(e,i){
+    return '<div class="item"><span class="small">' + e.date +
+      (e.km ? ' · ' + e.km + ' km' : '') + (e.time ? ' · in ' + e.time : '') +
+      (e.note ? '<br><span class="dim">' + e.note + '</span>' : '') +
+      '</span><button class="x" data-i="' + i + '">×</button></div>';
+  }).join('');
+  Array.prototype.forEach.call($('lList').querySelectorAll('.x'), function(b){
+    b.onclick = function(){ S.log.splice(+b.getAttribute('data-i'),1); save(); renderLog(); };
+  });
+}
+$('lAdd').onclick = function(){
+  var d = $('lDate').value || iso(new Date());
+  S.log.unshift({date:d, km:+$('lKmIn').value || 0, time:$('lTime').value, note:$('lNote').value});
+  $('lKmIn').value = ''; $('lNote').value = ''; $('lTime').value = '';
+  save(); renderLog();
+};
+$('lRate').addEventListener('input', function(){ S.kmRate = +$('lRate').value; save(); renderLog(); });
 
-  /* tap the middle of the wheel — clicks on the segments still do their own thing */
-  wrap.addEventListener('click', function(e){
-    var r = wrap.getBoundingClientRect();
-    var dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2);
-    if(Math.sqrt(dx*dx + dy*dy) < (r.width * HUB_PCT)/2) input.click();
+/* ---------- skills ---------- */
+var ticketInput = document.createElement('input');
+ticketInput.type = 'file'; ticketInput.accept = 'image/*'; ticketInput.style.display = 'none';
+document.body.appendChild(ticketInput);
+var ticketFor = null;
+ticketInput.onchange = function(){
+  var m = ticketFor;
+  squash(ticketInput.files[0], 900, function(data){ S.tickets[m] = data; save(); renderSkills(); });
+  ticketInput.value = '';
+};
+
+var resumeInput = document.createElement('input');
+resumeInput.type = 'file'; resumeInput.accept = '.pdf,.doc,.docx,image/*';
+resumeInput.style.display = 'none';
+document.body.appendChild(resumeInput);
+resumeInput.onchange = function(){
+  var f = resumeInput.files[0]; if(!f) return;
+  S.resume = {name:f.name}; window.__resumeFile = f; save(); renderSkills();
+};
+
+function renderSkills(){
+  $('sMach').innerHTML = MACHINES.map(function(m){
+    return '<button class="pill ' + (S.machines.indexOf(m) > -1 ? 'on' : '') + '" data-m="' + m + '">' + m + '</button>';
+  }).join('');
+  Array.prototype.forEach.call($('sMach').querySelectorAll('.pill'), function(b){
+    b.onclick = function(){
+      var m = b.getAttribute('data-m'), i = S.machines.indexOf(m);
+      if(i > -1){ S.machines.splice(i,1); delete S.tickets[m]; } else { S.machines.push(m); }
+      save(); renderSkills();
+    };
   });
 
-  /* centre-crop to a square, shrink to 520px so it isn't a 4MB camera file */
-  input.onchange = function(){
-    var f = input.files[0]; if(!f) return;
-    var fr = new FileReader();
-    fr.onload = function(){
-      var im = new Image();
-      im.onload = function(){
-        var side = Math.min(im.width, im.height), out = 520;
-        var c = document.createElement('canvas'); c.width = c.height = out;
-        c.getContext('2d').drawImage(im,(im.width-side)/2,(im.height-side)/2,side,side,0,0,out,out);
-        var data = c.toDataURL('image/jpeg', 0.82);
-        try{ localStorage.setItem(KEY, data); }catch(x){}
-        paint(data);
-      };
-      im.src = fr.result;
-    };
-    fr.readAsDataURL(f);
-    input.value = '';
-  };
+  if(!S.machines.length){
+    $('sTickets').innerHTML = '<p class="dim small">Pick a machine above, then attach its ticket.</p>';
+  }else{
+    $('sTickets').innerHTML = S.machines.map(function(m){
+      var t = S.tickets[m];
+      return '<div class="item"><div><div class="small">' + m + '</div>' +
+        (t ? '<div class="tick"><img src="' + t + '"><span class="dim small">Ticket attached</span></div>'
+           : '<div class="dim small">No ticket</div>') + '</div>' +
+        '<button class="pill" data-add="' + m + '">' + (t ? 'Replace' : 'Attach') + '</button></div>';
+    }).join('');
+    Array.prototype.forEach.call($('sTickets').querySelectorAll('[data-add]'), function(b){
+      b.onclick = function(){ ticketFor = b.getAttribute('data-add'); ticketInput.click(); };
+    });
+  }
 
-  var saved = null; try{ saved = localStorage.getItem(KEY); }catch(x){}
-  paint(saved);
-})();
+  $('sResume').innerHTML = S.resume
+    ? '<div class="item"><span class="small">' + S.resume.name + '</span>' +
+      '<button class="x" id="sResumeRm">×</button></div>'
+    : '<p class="dim small">No resume attached.</p>';
+  if($('sResumeRm')) $('sResumeRm').onclick = function(){
+    S.resume = null; window.__resumeFile = null; save(); renderSkills();
+  };
+}
+$('sResumeAdd').onclick = function(){ resumeInput.click(); };
+$('sShare').onclick = function(){
+  var txt = (S.name || 'Operator') + (S.site ? ' — ' + S.site : '') + '\n\n' +
+    'Machines: ' + (S.machines.join(', ') || 'not listed') + '\n' +
+    'Tickets held: ' + (Object.keys(S.tickets).join(', ') || 'none attached') + '\n' +
+    'Roster: ' + S.roster + (S.emp ? ' · ' + S.emp : '');
+  var data = {title:'Operator profile', text:txt};
+  if(window.__resumeFile && navigator.canShare && navigator.canShare({files:[window.__resumeFile]})){
+    data.files = [window.__resumeFile];
+  }
+  if(navigator.share){ navigator.share(data).catch(function(){}); }
+  else{
+    navigator.clipboard.writeText(txt).then(function(){ alert('Profile copied to clipboard.'); },
+      function(){ alert(txt); });
+  }
+};
+
+/* ---------- docs ---------- */
+function renderDocs(){
+  if(!S.docs.length){ $('dList').innerHTML = '<p class="dim small">Nothing saved yet.</p>'; return; }
+  $('dList').innerHTML = S.docs.map(function(d,i){
+    return '<div class="item"><div><div class="small">' + d.title + '</div>' +
+      (d.link ? '<a class="dim small" href="' + d.link + '" target="_blank" rel="noopener">Open link</a>' : '') +
+      (d.note ? '<div class="dim small">' + d.note.replace(/\n/g,'<br>') + '</div>' : '') +
+      '</div><button class="x" data-i="' + i + '">×</button></div>';
+  }).join('');
+  Array.prototype.forEach.call($('dList').querySelectorAll('.x'), function(b){
+    b.onclick = function(){ S.docs.splice(+b.getAttribute('data-i'),1); save(); renderDocs(); };
+  });
+}
+$('dAdd').onclick = function(){
+  if(!$('dTitle').value) return;
+  S.docs.unshift({title:$('dTitle').value, link:$('dLink').value, note:$('dNote').value});
+  $('dTitle').value = $('dLink').value = $('dNote').value = '';
+  save(); renderDocs();
+};
+
+/* ---------- tabs ---------- */
+Array.prototype.forEach.call($('nav').querySelectorAll('button'), function(b){
+  b.onclick = function(){
+    Array.prototype.forEach.call($('nav').querySelectorAll('button'), function(x){ x.classList.remove('on'); });
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    $('tab-' + b.getAttribute('data-t')).classList.add('on');
+    window.scrollTo(0,0);
+    if(b.getAttribute('data-t') === 'roster') renderRoster();
+  };
+});
+
+/* ---------- wizard ---------- */
+var step = 1;
+function wizShow(){
+  Array.prototype.forEach.call(document.querySelectorAll('.wizstep'), function(el){
+    el.hidden = (+el.getAttribute('data-s') !== step);
+  });
+  Array.prototype.forEach.call($('wizSteps').children, function(i,n){
+    i.className = (n < step) ? 'on' : '';
+  });
+  $('wizBack').style.visibility = step === 1 ? 'hidden' : 'visible';
+  $('wizNext').textContent = step === 5 ? 'Start' : 'Next';
+}
+function wizBuild(){
+  $('wRoster').innerHTML = PRESETS.map(function(p){
+    return '<button class="pill ' + (S.roster === p.id ? 'on' : '') + '" data-r="' + p.id + '">' + p.label + '</button>';
+  }).join('');
+  Array.prototype.forEach.call($('wRoster').querySelectorAll('.pill'), function(b){
+    b.onclick = function(){
+      var id = b.getAttribute('data-r');
+      S.roster = id;
+      var p = PRESETS.filter(function(x){ return x.id === id; })[0];
+      if(id !== 'custom'){ S.on = p.on; S.off = p.off; }
+      $('wCustom').hidden = (id !== 'custom');
+      wizBuild();
+    };
+  });
+  $('wTheme').innerHTML = THEMES.map(function(t){
+    return '<button class="pill ' + (S.theme === t.id ? 'on' : '') + '" data-th="' + t.id + '">' + t.label + '</button>';
+  }).join('');
+  Array.prototype.forEach.call($('wTheme').querySelectorAll('.pill'), function(b){
+    b.onclick = function(){
+      S.theme = b.getAttribute('data-th');
+      document.documentElement.setAttribute('data-theme', S.theme);
+      wizBuild();
+    };
+  });
+  Array.prototype.forEach.call($('wEmp').querySelectorAll('.pill'), function(b){
+    b.className = 'pill' + (S.emp === b.getAttribute('data-v') ? ' on' : '');
+    b.onclick = function(){ S.emp = b.getAttribute('data-v'); wizBuild(); };
+  });
+  $('wName').value = S.name; $('wSite').value = S.site;
+  $('wOn').value = S.on; $('wOff').value = S.off;
+  $('wStart').value = S.start || iso(new Date());
+  $('wTravel').checked = !!S.travel;
+  $('wRate').value = S.rate || ''; $('wHrs').value = S.hrs || 12;
+  $('wCustom').hidden = (S.roster !== 'custom');
+}
+$('wizNext').onclick = function(){
+  if(step === 1){ S.name = $('wName').value; S.site = $('wSite').value; }
+  if(step === 3){
+    if(S.roster === 'custom'){ S.on = +$('wOn').value || 7; S.off = +$('wOff').value || 7; }
+    S.start = $('wStart').value || iso(new Date());
+    S.travel = $('wTravel').checked;
+  }
+  if(step === 4){ S.rate = +$('wRate').value || 0; S.hrs = +$('wHrs').value || 12; }
+  if(step === 5){
+    S.setup = true; save(); $('wiz').classList.remove('on'); renderAll(); return;
+  }
+  step++; wizShow();
+};
+$('wizBack').onclick = function(){ if(step > 1){ step--; wizShow(); } };
+$('btnSetup').onclick = function(){ step = 1; wizBuild(); wizShow(); $('wiz').classList.add('on'); };
+
+/* ---------- boot ---------- */
+function renderAll(){
+  document.documentElement.setAttribute('data-theme', S.theme || '');
+  renderRoster(); paintPhoto(); renderPay(); renderLog(); renderSkills(); renderDocs();
+}
+if(!S.setup){ wizBuild(); wizShow(); $('wiz').classList.add('on'); }
+renderAll();
 </script>
-<!-- ===== END PERSONAL PHOTO + BUILD STAMP ===== -->
+</body>
+</html>
