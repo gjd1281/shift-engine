@@ -45,7 +45,7 @@
     text-transform:uppercase;cursor:pointer;flex:none}
   #editBtn:hover{color:var(--text);border-color:var(--muted)}
 
-  nav{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--line);
+  nav{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid var(--line);
     border-radius:4px;overflow:hidden;margin-bottom:20px;background:var(--surface)}
   nav button{background:transparent;border:none;border-right:1px solid var(--line);
     color:var(--muted);padding:11px 1px;font-family:'IBM Plex Mono',monospace;font-size:9px;
@@ -264,7 +264,7 @@
   .viewBanner{background:color-mix(in srgb,var(--night) 18%,transparent);border:1px solid var(--night);
     border-radius:4px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.5}
   body.viewmode nav,body.viewmode #shareSec,body.viewmode #patternSec,
-  body.viewmode #themeSec,body.viewmode #cribSec,body.viewmode #editBtn{display:none!important}
+  body.viewmode #themeSec,body.viewmode #editBtn{display:none!important}
 
   /* ---- centre photo ---- */
   .core .photoWrap{width:96px;height:96px;border-radius:50%;overflow:hidden;
@@ -409,11 +409,7 @@
       <h1 class="sHead">Pick your look.</h1>
       <p class="sBody">Night shift needs a screen that won't blind you at three in the morning. Day shift in the sun needs the opposite. Change it any time.</p>
       <div class="themes" id="sThemes"></div>
-      <p class="sBody" style="margin:26px 0 0">There's a crib room tab as well — Load the Trucks and a leaderboard for your crew. Nothing to do with work. It stays out of the way unless you want it.</p>
-      <div class="seg" role="group">
-        <button id="sCribOff" aria-pressed="true">Leave it off</button>
-        <button id="sCribOn" aria-pressed="false">Turn Crib on</button>
-      </div>
+      
       <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" id="sDone">Open my roster</button></div>
     </div>
   </div>
@@ -435,7 +431,7 @@
     <button role="tab" aria-selected="false" data-tab="log">Log</button>
     <button role="tab" aria-selected="false" data-tab="skills">Skills</button>
     <button role="tab" aria-selected="false" data-tab="docs">Docs</button>
-    <button role="tab" aria-selected="false" data-tab="crib" id="cribTabBtn" style="display:none">Crib</button>
+    <button role="tab" aria-selected="false" data-tab="crib" id="cribTabBtn">Crib</button>
   </nav>
 
   <div class="panel on" id="tab-roster">
@@ -511,15 +507,6 @@
           <button class="ghost" id="shareText">Copy as a message</button>
         </div>
         <p class="hint" id="shareMsg" style="margin-bottom:0"></p>
-      </div>
-    </section>
-
-    <section id="cribSec">
-      <h2>Crib room</h2>
-      <p class="hint">A sixth tab with Load the Trucks and the crew leaderboard on it. Off by default — turn it on if the boys want a go at crib.</p>
-      <div class="seg" role="group">
-        <button id="cribOffBtn" aria-pressed="true">Off</button>
-        <button id="cribOnBtn" aria-pressed="false">On</button>
       </div>
     </section>
 
@@ -889,20 +876,16 @@
   $('sAnchor').addEventListener('input',()=>{$('anchor').value=$('sAnchor').value;renderAnchorCheck()});
   $('sCasual').addEventListener('click',()=>{$('sCasual').setAttribute('aria-pressed','true');$('sPerm').setAttribute('aria-pressed','false')});
   $('sPerm').addEventListener('click',()=>{$('sPerm').setAttribute('aria-pressed','true');$('sCasual').setAttribute('aria-pressed','false')});
-  $('sCribOn').addEventListener('click',()=>{$('sCribOn').setAttribute('aria-pressed','true');$('sCribOff').setAttribute('aria-pressed','false')});
-  $('sCribOff').addEventListener('click',()=>{$('sCribOff').setAttribute('aria-pressed','true');$('sCribOn').setAttribute('aria-pressed','false')});
   $('sDone').addEventListener('click',()=>{
     $('anchor').value=$('sAnchor').value;$('startDate').value=$('sStart').value;
     $('rate').value=$('sRate').value;$('hours').value=$('sHours').value;$('km').value=$('sKm').value;
     setEmployment($('sCasual').getAttribute('aria-pressed')==='true');
-    setCrib($('sCribOn').getAttribute('aria-pressed')==='true');
     swipes=null;renderAll();$('setup').classList.add('hide');
   });
   $('editBtn').addEventListener('click',()=>{
     $('sAnchor').value=$('anchor').value;$('sStart').value=$('startDate').value;
     $('sRate').value=$('rate').value;$('sHours').value=$('hours').value;$('sKm').value=$('km').value;
     $('sCasual').setAttribute('aria-pressed',casual);$('sPerm').setAttribute('aria-pressed',!casual);
-    $('sCribOn').setAttribute('aria-pressed',cribOn);$('sCribOff').setAttribute('aria-pressed',!cribOn);
     renderSetupPresets();renderThemes();$('setup').classList.remove('hide');showStep(1);
   });
 
@@ -1264,23 +1247,7 @@
   }
 
   /* ================= CRIB ================= */
-  let cribOn=false, gameSrc='', crewCode='', scores=[];
-
-  function setCrib(on){
-    cribOn=!!on;
-    $('cribOnBtn').setAttribute('aria-pressed',cribOn);
-    $('cribOffBtn').setAttribute('aria-pressed',!cribOn);
-    $('cribTabBtn').style.display=cribOn?'':'none';
-    $('mainNav').style.gridTemplateColumns='repeat('+(cribOn?6:5)+',1fr)';
-    if(!cribOn && $('tab-crib').classList.contains('on')){
-      document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected','false'));
-      document.querySelector('nav button[data-tab=roster]').setAttribute('aria-selected','true');
-      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
-      $('tab-roster').classList.add('on');
-    }
-  }
-  $('cribOnBtn').addEventListener('click',()=>{setCrib(true);save&&save()});
-  $('cribOffBtn').addEventListener('click',()=>{setCrib(false);save&&save()});
+  let gameSrc='', crewCode='', scores=[];
 
   document.querySelectorAll('.subtabs button').forEach(b=>b.addEventListener('click',()=>{
     document.querySelectorAll('.subtabs button').forEach(x=>x.setAttribute('aria-selected','false'));
@@ -1561,7 +1528,7 @@
       depTime:$('depTime').value, campTime:$('campTime').value,
       machines:myMachines, tickets, photoData,
       wokeTime:$('wokeTime').value, wokeDay:$('wokeDay').value, annualIn:$('annualIn').value,
-      cribOn, gameSrc, crewCode, scores
+      gameSrc, crewCode, scores
     };
   }
   function save(){
@@ -1588,7 +1555,6 @@
     if(Array.isArray(d.scores)) scores=d.scores;
     setEmployment(d.casual!==false);
     setSkillMode(d.multi!==false);
-    setCrib(d.cribOn===true);
     loadGame();
     return true;
   }
@@ -1608,7 +1574,7 @@
     renderAll();
     $('saveState').textContent='Saved on this device.';
   }else{
-    setEmployment(true); renderAll(); setSkillMode(true); setCrib(false); loadGame();
+    setEmployment(true); renderAll(); setSkillMode(true); loadGame();
     $('saveState').textContent='Nothing saved yet — finish setup and it sticks.';
   }
   ready=true;
