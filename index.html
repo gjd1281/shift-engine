@@ -735,7 +735,7 @@
           <canvas id="gameCanvas" width="360" height="480"></canvas>
           <div class="gameOverlay" id="gameOverlay">
             <div class="goTitle" id="goTitle">Load the Trucks</div>
-            <div class="goBody" id="goBody">Tap to drop the bucket. Fill the tray, don&rsquo;t dump it on the deck.</div>
+            <div class="goBody" id="goBody">Tap to tip the bucket. Five in the tray before the driver gives up &mdash; three on the deck and you&rsquo;re done.</div>
             <button class="solid" id="goBtn" style="max-width:200px">Start</button>
           </div>
         </div>
@@ -1261,102 +1261,206 @@
 
   /* ---- Load the Trucks ---- */
   const cv=$('gameCanvas'), cx=cv.getContext('2d');
-  const W=360,H=480, GROUND=430;
-  let G=null, raf=null, C={};
+  const W=360,H=480,GY=392;          // ground line
+  const PX=104,PY=352;               // slew pivot (top of the house)
+  const ARM=132;                     // boom + stick reach
+  const PARK=248;                    // where the truck sits under the load
+  let G=null,raf=null,C={};
 
   function colours(){
-    const cs=getComputedStyle(document.documentElement), g=k=>cs.getPropertyValue('--'+k).trim();
+    const cs=getComputedStyle(document.documentElement),g=k=>cs.getPropertyValue('--'+k).trim();
     C={bg:g('bg'),surf:g('surface-2'),line:g('line'),text:g('text'),muted:g('muted'),
        day:g('day'),day2:g('day2'),night:g('night'),home:g('home'),bad:g('bad'),ink:g('ink')};
   }
+
   function newGame(){
     colours();
-    G={score:0,lives:3,t:0,swing:0,load:null,trucks:[],spawn:0,over:false};
-    addTruck();
+    G={score:0,lives:3,t:0,swing:-1.05,dir:1,bucket:1,load:null,dust:[],spill:[],
+       truck:null,wait:0,loads:0,over:false,flash:0};
+    nextTruck();
   }
-  function addTruck(){
-    const spd=1.1+Math.min(1.9,(G.score/220));
-    G.trucks.push({x:-90,w:86,spd:spd,fill:0,gone:false});
+  function nextTruck(){
+    const hard=Math.min(1,G.score/900);
+    G.truck={x:W+70,state:'in',fill:0,tip:0,timer:0,cap:5};
+    G.loads=0;
+    G.window=Math.round(560-260*hard);   // frames the driver will wait
   }
-  function bucketX(){ return W/2 + Math.sin(G.swing)*126; }
+
+  const bx=()=>PX+Math.cos(G.swing)*ARM;
+  const by=()=>PY+Math.sin(G.swing)*ARM;
 
   function drop(){
-    if(!G||G.over||G.load) return;
-    G.load={x:bucketX(),y:96,vy:0};
+    if(!G||G.over||G.load||!G.bucket) return;
+    G.load={x:bx(),y:by(),vy:0,vx:Math.cos(G.swing)*0.6};
+    G.bucket=0;
   }
   cv.addEventListener('pointerdown',e=>{e.preventDefault();drop()});
 
+  function puff(x,y,n,c){
+    for(let i=0;i<n;i++)
+      G.dust.push({x:x,y:y,vx:(Math.random()-.5)*1.8,vy:-Math.random()*1.4,l:26+Math.random()*18,c:c||C.muted});
+  }
+
   function tick(){
-    G.t++;
-    G.swing += 0.028 + Math.min(0.022,G.score/9000);
+    G.t++; if(G.flash>0) G.flash--;
+    const spd=0.016+Math.min(0.020,G.score/14000);
+    G.swing+=spd*G.dir;
+    if(G.swing>-0.34){G.swing=-0.34;G.dir=-1}
+    if(G.swing<-2.55){G.swing=-2.55;G.dir=1;}
+    // back over the pile with an empty bucket: dig
+    if(!G.bucket && !G.load && G.swing<-2.30){ G.bucket=1; puff(bx(),by()+14,5); }
+
+    const tr=G.truck;
+    if(tr.state==='in'){ tr.x-=2.6; if(tr.x<=PARK){tr.x=PARK;tr.state='load';tr.timer=G.window} }
+    else if(tr.state==='load'){
+      tr.timer--;
+      if(tr.fill>=tr.cap){ tr.state='off'; G.score+=60; G.flash=26; }
+      else if(tr.timer<=0){ tr.state='off'; }
+    }
+    else if(tr.state==='off'){
+      tr.tip=Math.min(1,tr.tip+0.04);
+      tr.x-=3.4;
+      if(tr.x<-140) nextTruck();
+    }
 
     if(G.load){
-      G.load.vy += 0.42;
-      G.load.y += G.load.vy;
-      if(G.load.y>=GROUND-16){
-        let hit=null;
-        for(const tr of G.trucks){
-          const tx=tr.x+18, tw=tr.w-30;
-          if(G.load.x>tx && G.load.x<tx+tw && tr.fill<4){ hit=tr; break; }
-        }
-        if(hit){
-          hit.fill++;
-          G.score += 10 + hit.fill*5;
-          if(hit.fill>=4){ hit.spd*=2.1; hit.gone=true; }
-        }else{
-          G.lives--;
-          if(G.lives<=0) endGame();
-        }
+      G.load.vy+=0.42; G.load.y+=G.load.vy; G.load.x+=G.load.vx;
+      const trayTop=GY-64, tx=tr.x+16, tw=86;
+      if(G.load.y>=trayTop && tr.state==='load' && G.load.x>tx && G.load.x<tx+tw){
+        tr.fill++; G.score+=15; puff(G.load.x,trayTop,6,C.muted); G.load=null;
+      }else if(G.load.y>=GY-6){
+        G.lives--; puff(G.load.x,GY-4,10,C.bad);
+        G.spill.push({x:G.load.x,s:0});
         G.load=null;
+        if(G.lives<=0) return endGame();
       }
     }
 
-    G.trucks.forEach(tr=>tr.x+=tr.spd);
-    G.trucks=G.trucks.filter(tr=>tr.x<W+120);
-    G.spawn--;
-    if(G.spawn<=0 && G.trucks.length<3){
-      addTruck();
-      G.spawn = 150 - Math.min(70,G.score/12);
-    }
+    G.dust.forEach(d=>{d.x+=d.vx;d.y+=d.vy;d.vy+=0.03;d.l--});
+    G.dust=G.dust.filter(d=>d.l>0);
+    G.spill.forEach(p=>p.s=Math.min(1,p.s+0.06));
 
     $('hudScore').textContent=G.score.toLocaleString('en-AU');
     $('hudLives').textContent='\u25CF'.repeat(Math.max(0,G.lives));
   }
 
-  function truck(tr){
-    const x=tr.x, y=GROUND;
-    cx.fillStyle=C.line;
-    cx.fillRect(x+16,y-30,tr.w-30,26);                 // tray
-    cx.fillStyle=tr.gone?C.home:C.day;
-    cx.fillRect(x+tr.w-26,y-40,26,36);                 // cab
-    for(let i=0;i<tr.fill;i++){                        // load in the tray
-      cx.fillStyle=C.muted;
-      cx.fillRect(x+20+i*((tr.w-38)/4), y-30-6, (tr.w-38)/4-3, 10);
-    }
-    cx.fillStyle=C.text;
-    [x+26,x+tr.w-38,x+tr.w-14].forEach(wx=>{
-      cx.beginPath();cx.arc(wx,y,8,0,7);cx.fill();
-    });
+  /* ---------- drawing ---------- */
+  function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);
+    cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath();cx.fill()}
+
+  function wheel(x,y,r){
+    cx.fillStyle='#111'; cx.beginPath();cx.arc(x,y,r,0,7);cx.fill();
+    cx.fillStyle=C.muted; cx.beginPath();cx.arc(x,y,r*0.42,0,7);cx.fill();
   }
+
+  function haulTruck(tr){
+    const x=tr.x,y=GY;
+    // dump body
+    cx.save();
+    cx.translate(x+16,y-30);
+    cx.rotate(-tr.tip*0.5);
+    cx.fillStyle=C.line;
+    cx.beginPath();
+    cx.moveTo(0,-34); cx.lineTo(90,-24); cx.lineTo(88,4); cx.lineTo(4,4);
+    cx.closePath(); cx.fill();
+    cx.fillStyle=C.muted;                     // canopy over the cab
+    cx.fillRect(78,-36,20,8);
+    for(let i=0;i<tr.fill;i++){                // dirt heaped in the tray
+      const w=76/tr.cap;
+      cx.fillStyle=i%2?C.day2:C.muted;
+      cx.beginPath();
+      cx.moveTo(8+i*w,2); cx.lineTo(8+i*w+w*0.5,-14); cx.lineTo(8+i*w+w,2);
+      cx.closePath(); cx.fill();
+    }
+    cx.restore();
+    // chassis
+    cx.fillStyle=C.day; rr(x+6,y-24,104,16,3);
+    // cab
+    cx.fillStyle=C.day; rr(x+96,y-46,26,24,3);
+    cx.fillStyle=C.night; rr(x+100,y-42,17,11,2);
+    // ladder
+    cx.strokeStyle=C.muted;cx.lineWidth=1.5;
+    cx.beginPath();cx.moveTo(x+120,y-22);cx.lineTo(x+120,y-6);cx.stroke();
+    wheel(x+30,y-6,13); wheel(x+56,y-6,13); wheel(x+106,y-6,12);
+  }
+
+  function excavator(){
+    // tracks
+    cx.fillStyle=C.line; rr(PX-52,GY-26,104,22,10);
+    cx.fillStyle=C.muted;
+    for(let i=0;i<7;i++) cx.fillRect(PX-46+i*14,GY-24,7,18);
+    cx.fillStyle=C.line; cx.beginPath();cx.arc(PX-38,GY-15,8,0,7);cx.arc(PX+38,GY-15,8,0,7);cx.fill();
+    // house + counterweight
+    cx.fillStyle=C.day2; rr(PX-40,GY-58,74,32,4);
+    cx.fillStyle=C.line;  rr(PX-52,GY-52,16,24,3);
+    // cab
+    cx.fillStyle=C.day; rr(PX+12,GY-76,26,26,3);
+    cx.fillStyle=C.night; rr(PX+16,GY-72,17,13,2);
+    // exhaust
+    cx.fillStyle=C.muted; cx.fillRect(PX-16,GY-70,5,13);
+
+    // boom + stick
+    const ex=PX+Math.cos(G.swing+0.34)*(ARM*0.56), ey=PY+Math.sin(G.swing+0.34)*(ARM*0.56);
+    cx.strokeStyle=C.day2; cx.lineCap='round';
+    cx.lineWidth=13; cx.beginPath();cx.moveTo(PX,PY);cx.lineTo(ex,ey);cx.stroke();
+    cx.lineWidth=10; cx.beginPath();cx.moveTo(ex,ey);cx.lineTo(bx(),by());cx.stroke();
+    // ram
+    cx.strokeStyle=C.muted;cx.lineWidth=3;
+    cx.beginPath();cx.moveTo(PX+6,PY-6);cx.lineTo(ex,ey);cx.stroke();
+
+    // bucket
+    const a=G.swing;
+    cx.save(); cx.translate(bx(),by()); cx.rotate(a+1.57);
+    cx.fillStyle=C.line;
+    cx.beginPath(); cx.moveTo(-13,-4);cx.lineTo(13,-4);cx.lineTo(9,17);cx.lineTo(-9,17);
+    cx.closePath(); cx.fill();
+    cx.fillStyle=C.text;                       // teeth
+    for(let i=-1;i<2;i++) cx.fillRect(i*7-2,16,4,5);
+    if(G.bucket){ cx.fillStyle=C.muted; cx.beginPath();
+      cx.moveTo(-11,-4);cx.lineTo(11,-4);cx.lineTo(0,-16);cx.closePath();cx.fill(); }
+    cx.restore();
+  }
+
   function draw(){
-    cx.clearRect(0,0,W,H);
     cx.fillStyle=C.bg; cx.fillRect(0,0,W,H);
 
-    cx.strokeStyle=C.line; cx.lineWidth=2;
-    cx.beginPath(); cx.moveTo(0,GROUND+9); cx.lineTo(W,GROUND+9); cx.stroke();
+    // bench + ground
+    cx.fillStyle=C.surf; cx.fillRect(0,GY-4,W,H-GY+4);
+    cx.strokeStyle=C.line;cx.lineWidth=2;
+    cx.beginPath();cx.moveTo(0,GY-4);cx.lineTo(W,GY-4);cx.stroke();
 
-    const bx=bucketX();
-    cx.strokeStyle=C.muted; cx.lineWidth=2;
-    cx.beginPath(); cx.moveTo(W/2,18); cx.lineTo(bx,84); cx.stroke();
-    cx.fillStyle=C.day2;
-    cx.beginPath();
-    cx.moveTo(bx-17,84); cx.lineTo(bx+17,84); cx.lineTo(bx+11,106); cx.lineTo(bx-11,106);
-    cx.closePath(); cx.fill();
+    // muck pile behind the machine
+    cx.fillStyle=C.line;
+    cx.beginPath();cx.moveTo(-10,GY-4);cx.lineTo(34,GY-92);cx.lineTo(96,GY-4);cx.closePath();cx.fill();
+    cx.fillStyle=C.muted;
+    cx.beginPath();cx.moveTo(12,GY-4);cx.lineTo(34,GY-88);cx.lineTo(52,GY-4);cx.closePath();cx.fill();
 
-    if(G.load){ cx.fillStyle=C.muted; cx.fillRect(G.load.x-8,G.load.y-8,16,14); }
-    G.trucks.forEach(truck);
+    // spilled loads on the deck
+    G.spill.forEach(p=>{cx.fillStyle=C.bad;cx.globalAlpha=.5;
+      cx.beginPath();cx.ellipse(p.x,GY-3,14*p.s,4*p.s,0,0,7);cx.fill();cx.globalAlpha=1});
+
+    haulTruck(G.truck);
+    excavator();
+
+    if(G.load){cx.fillStyle=C.muted;
+      cx.beginPath();cx.arc(G.load.x,G.load.y,8,0,7);cx.fill();}
+
+    G.dust.forEach(d=>{cx.globalAlpha=Math.max(0,d.l/44);cx.fillStyle=d.c;
+      cx.beginPath();cx.arc(d.x,d.y,3.5,0,7);cx.fill();cx.globalAlpha=1});
+
+    // load counter above the truck while it waits
+    const tr=G.truck;
+    if(tr.state==='load'){
+      cx.fillStyle=C.muted;cx.font='600 12px "IBM Plex Mono",monospace';cx.textAlign='center';
+      cx.fillText(tr.fill+' / '+tr.cap, tr.x+58, GY-92);
+      const w=Math.max(0,tr.timer/G.window)*84;
+      cx.fillStyle=C.line;cx.fillRect(tr.x+16,GY-86,84,4);
+      cx.fillStyle=tr.timer<120?C.bad:C.home;cx.fillRect(tr.x+16,GY-86,w,4);
+    }
+    if(G.flash>0){cx.globalAlpha=G.flash/40;cx.fillStyle=C.home;cx.fillRect(0,0,W,H);cx.globalAlpha=1}
   }
-  function loop(){ if(!G||G.over) return; tick(); draw(); raf=requestAnimationFrame(loop); }
+
+  function loop(){ if(!G||G.over) return; tick(); if(G&&!G.over) draw(); raf=requestAnimationFrame(loop); }
 
   function startGame(){
     newGame();
@@ -1367,7 +1471,7 @@
   function endGame(){
     G.over=true; cancelAnimationFrame(raf); draw();
     $('goTitle').textContent=G.score.toLocaleString('en-AU');
-    $('goBody').textContent = G.score>=(scores[0]?scores[0].n:0)
+    $('goBody').textContent = G.score>(scores[0]?scores[0].n:0)
       ? 'New best. Get in ya beauty.' : 'Three on the deck. Have another go.';
     $('goBtn').textContent='Go again';
     $('gameOverlay').classList.remove('hide');
