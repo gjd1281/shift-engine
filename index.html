@@ -1,0 +1,1057 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Ultimate Shift Engine</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0C0A14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shift Engine">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#0C0A14; --bg2:#15111F; --glow:#241B3A;
+    --surface:#1A1526; --surface-2:#241C33; --line:#332A47;
+    --text:#F3EEF9; --muted:#9B90B0; --ink:#1A1005;
+    --day:#FFB62E; --day2:#FF7A45;
+    --night:#4CC9F0; --night2:#4361EE;
+    --off:#2F5A4B; --home:#3DD9A0; --travel:#F7529A;
+    --bad:#FF5F6D; --good:#3DD9A0;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(900px 520px at 50% -60px, var(--glow) 0%, transparent 62%),
+      linear-gradient(180deg,var(--bg2) 0%, var(--bg) 42%);
+    background-attachment:fixed;
+    color:var(--text);font-family:'Archivo',system-ui,sans-serif;
+    font-size:15px;line-height:1.45;padding:0 0 40px;min-height:100vh}
+  .wrap{max-width:440px;margin:0 auto;padding:0 18px}
+  .mono{font-family:'IBM Plex Mono',monospace}
+
+  header{padding:24px 0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{line-height:.92}
+  .brandTop{font-variation-settings:'wdth' 112,'wght' 500;font-size:15px;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--muted)}
+  .brandBot{font-variation-settings:'wdth' 118,'wght' 800;font-size:30px;letter-spacing:.03em;
+    margin-top:5px;background:linear-gradient(96deg,var(--day) 0%,var(--travel) 55%,var(--night) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  #editBtn{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:4px;
+    padding:8px 11px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;cursor:pointer;flex:none}
+  #editBtn:hover{color:var(--text);border-color:var(--muted)}
+
+  nav{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--line);
+    border-radius:4px;overflow:hidden;margin-bottom:20px;background:var(--surface)}
+  nav button{background:transparent;border:none;border-right:1px solid var(--line);
+    color:var(--muted);padding:11px 2px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+    letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+  nav button:last-child{border-right:none}
+  nav button[aria-selected=true]{background:var(--surface-2);color:var(--text);box-shadow:inset 0 -2px 0 var(--day)}
+  .panel{display:none}.panel.on{display:block}
+
+  section{margin:0 0 28px}
+  h2{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);font-weight:500;margin:0 0 4px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+  .hint{font-size:12.5px;color:var(--muted);margin:11px 0 13px}
+  .warn{font-size:12px;color:var(--muted);border-left:2px solid var(--travel);
+    padding:8px 0 8px 11px;margin:14px 0 0;line-height:1.5}
+
+  .ringbox{position:relative;margin:2px 0}
+  svg.ring{display:block;width:100%;height:auto;overflow:visible}
+  .ring path{cursor:pointer;transition:opacity .18s}
+  .ring path.dim{opacity:.42}
+  .ring text{font-family:'IBM Plex Mono',monospace;font-size:8.5px;fill:var(--muted)}
+  .ring text.now{fill:var(--text);font-weight:600}
+  .core{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;pointer-events:none;padding:0 58px}
+  .core .kicker{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--muted)}
+  .core .big{font-variation-settings:'wdth' 112,'wght' 800;font-size:42px;line-height:1;margin:6px 0 2px}
+  .core .sub{font-size:13px;color:var(--muted);line-height:1.3}
+
+  .strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 24px}
+  .cell{background:linear-gradient(160deg,var(--surface-2) 0%,var(--surface) 70%);
+    border:1px solid var(--line);border-radius:4px;padding:12px 13px}
+  .cell .lab{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted)}
+  .cell .val{font-variation-settings:'wdth' 105,'wght' 700;font-size:19px;margin-top:5px;line-height:1.15}
+  .cell .note{font-size:12px;color:var(--muted);margin-top:3px}
+
+  .presets{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 16px}
+  .preset{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
+    border-radius:20px;padding:7px 13px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer}
+  .preset:hover{color:var(--text);border-color:var(--muted)}
+  .preset[aria-pressed=true]{background:linear-gradient(96deg,var(--day),var(--day2));
+    border-color:transparent;color:var(--ink);font-weight:600}
+
+  /* theme swatches */
+  .themes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+  .theme{border:1px solid var(--line);border-radius:5px;padding:10px 9px 9px;background:var(--surface);
+    cursor:pointer;text-align:left}
+  .theme[aria-pressed=true]{border-color:var(--day);box-shadow:0 0 0 1px var(--day)}
+  .theme .sw{display:flex;gap:3px;margin-bottom:7px}
+  .theme .sw i{height:16px;flex:1;border-radius:2px}
+  .theme .tn{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted)}
+  .theme[aria-pressed=true] .tn{color:var(--text)}
+
+  .chips{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .chip{aspect-ratio:1;border:1px solid var(--line);border-radius:4px;background:var(--surface);
+    color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;padding:0}
+  .chip span{position:absolute;top:2px;left:4px;font-size:8px;color:var(--muted);font-weight:400}
+  .chip.D{background:color-mix(in srgb,var(--day) 18%,transparent);border-color:var(--day);color:var(--day)}
+  .chip.N{background:color-mix(in srgb,var(--night) 16%,transparent);border-color:var(--night);color:var(--night)}
+  .chip.O{background:color-mix(in srgb,var(--home) 12%,transparent);border-color:var(--off);color:var(--home)}
+  .chip.T{background:color-mix(in srgb,var(--travel) 16%,transparent);border-color:var(--travel);color:var(--travel)}
+  .chip.today{outline:2px solid var(--text);outline-offset:1px}
+
+  .rowbtns{display:flex;gap:8px;margin-top:12px}
+  button.ghost{flex:1;background:transparent;border:1px solid var(--line);color:var(--muted);
+    border-radius:4px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+  button.ghost:hover{border-color:var(--muted);color:var(--text)}
+  button.solid{background:linear-gradient(96deg,var(--day),var(--day2));border:none;color:var(--ink);
+    border-radius:4px;padding:14px;width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px;
+    letter-spacing:.12em;text-transform:uppercase;font-weight:600;cursor:pointer}
+
+  .field{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:11px 0;border-bottom:1px solid var(--line)}
+  .field label{font-size:14px}
+  .field .unit{font-size:12px;color:var(--muted);margin-right:6px}
+  input[type=number],input[type=date],input[type=time],select{
+    background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    font-family:'IBM Plex Mono',monospace;font-size:14px;padding:7px 9px;border-radius:4px}
+  input[type=number],input[type=date]{width:136px;text-align:right}
+  select{width:150px}
+  input:focus,select:focus{outline:2px solid var(--day);outline-offset:1px}
+
+  .seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);
+    border-radius:4px;overflow:hidden;margin:14px 0 4px}
+  .seg button{background:transparent;border:none;color:var(--muted);padding:11px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;cursor:pointer}
+  .seg button[aria-pressed=true]{background:linear-gradient(96deg,var(--day),var(--day2));
+    color:var(--ink);font-weight:600}
+
+  .payhero{background:linear-gradient(150deg,var(--surface-2),var(--surface));
+    border:1px solid var(--line);border-left:3px solid var(--day);
+    border-radius:4px;padding:16px 15px;margin:16px 0 11px}
+  .payhero .lab{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted)}
+  .payhero .amt{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:32px;line-height:1.1;
+    margin-top:6px;background:linear-gradient(96deg,var(--day),var(--day2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .paygrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  .count{background:linear-gradient(150deg,color-mix(in srgb,var(--travel) 12%,transparent),var(--surface));
+    border:1px solid var(--line);border-radius:4px;padding:18px 16px}
+  .count .n{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:44px;line-height:1;
+    background:linear-gradient(96deg,var(--travel),var(--day));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .count .u{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);margin-top:6px}
+  .bar{height:5px;background:var(--off);border-radius:3px;margin:15px 0 9px;overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--travel),var(--day))}
+  .count .when{font-size:13px;color:var(--muted);line-height:1.5}
+
+  ol.up,ul.plain{list-style:none;margin:0;padding:0}
+  ol.up li{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .dot.D{background:var(--day)}.dot.N{background:var(--night)}
+  .dot.O{background:var(--home)}.dot.T{background:var(--travel)}
+  .upday{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);width:60px;flex:none}
+  .upname{font-size:14px;flex:1}
+  .upmeta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;justify-content:center}
+  .legend div{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12px}
+  th{text-align:left;font-weight:500;color:var(--muted);font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;padding:0 0 8px;border-bottom:1px solid var(--line)}
+  td{padding:7px 0;border-bottom:1px solid var(--line)}
+  td input[type=time]{width:80px;padding:5px 6px;font-size:12px}
+  .hrs{text-align:right;color:var(--muted)}
+
+  .verdict{border:1px solid var(--line);border-radius:4px;padding:14px 15px;margin-top:16px;background:var(--surface)}
+  .verdict.ok{border-left:3px solid var(--good)}
+  .verdict.bad{border-left:3px solid var(--bad)}
+  .verdict .head{font-variation-settings:'wght' 700;font-size:17px}
+  .verdict .body{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.5}
+
+  .drop{display:block;border:1px dashed var(--line);border-radius:4px;padding:24px 16px;text-align:center;
+    color:var(--muted);font-size:13px;cursor:pointer;background:var(--surface)}
+  .drop:hover{border-color:var(--day);color:var(--text)}
+  ul.plain li{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .fname{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fmeta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+  a.open{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--day);text-decoration:none;border:1px solid var(--line);
+    padding:5px 9px;border-radius:4px}
+  .empty{color:var(--muted);font-size:13px;padding:18px 0}
+
+  #setup{position:fixed;inset:0;z-index:50;overflow-y:auto;
+    background:radial-gradient(900px 520px at 50% -60px,var(--glow) 0%,transparent 62%),
+      linear-gradient(180deg,var(--bg2) 0%,var(--bg) 46%)}
+  #setup.hide{display:none}
+  .sWrap{max-width:440px;margin:0 auto;padding:34px 18px 40px;min-height:100vh;display:flex;flex-direction:column}
+  .steps{display:flex;gap:5px;margin-bottom:30px}
+  .steps i{height:3px;flex:1;background:var(--off);border-radius:2px}
+  .steps i.on{background:linear-gradient(90deg,var(--day),var(--day2))}
+  .sStep{display:none;flex:1;flex-direction:column}
+  .sStep.on{display:flex}
+  .sKick{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--muted)}
+  .sHead{font-variation-settings:'wdth' 108,'wght' 800;font-size:29px;line-height:1.12;margin:9px 0 10px}
+  .sBody{font-size:14px;color:var(--muted);line-height:1.55;margin-bottom:22px}
+  .sFoot{margin-top:auto;padding-top:26px;display:flex;gap:9px;align-items:center}
+  .sBack{background:transparent;border:none;color:var(--muted);font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:14px 4px}
+  .bigDate{width:100%!important;text-align:left!important;font-size:17px!important;padding:14px 13px!important}
+
+
+  /* ---- skills ---- */
+  .machines{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 6px}
+  .mach{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
+    border-radius:20px;padding:7px 13px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer}
+  .mach[aria-pressed=true]{background:color-mix(in srgb,var(--day) 20%,transparent);
+    border-color:var(--day);color:var(--day);font-weight:600}
+  .hourRow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .hourRow .mn{flex:1;font-size:14px}
+  .hourRow input{width:96px}
+  .hourRow .hu{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);width:34px}
+  .tick{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .tick .tn2{flex:1;font-size:14px}
+  .tick .td{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;
+    text-transform:uppercase;margin-top:2px}
+  .td.ok{color:var(--good)}.td.warn{color:var(--day)}.td.exp{color:var(--bad)}
+  .tick input[type=date]{width:140px}
+  .profile{background:linear-gradient(150deg,var(--surface-2),var(--surface));border:1px solid var(--line);
+    border-left:3px solid var(--night);border-radius:4px;padding:16px 15px;margin-top:4px}
+  .profile .pl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted)}
+  .profile .pv{font-size:14px;line-height:1.6;margin-top:8px}
+  .profile .pv b{font-variation-settings:'wght' 700}
+  footer{border-top:1px solid var(--line);padding-top:16px;margin-top:8px;font-size:12px;color:var(--muted)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<!-- ================= SETUP ================= -->
+<div id="setup">
+  <div class="sWrap">
+    <div class="steps"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+
+    <div class="sStep on" data-step="0">
+      <div class="sKick">The Ultimate Shift Engine</div>
+      <h1 class="sHead">Your roster isn't a week. Let's stop pretending it is.</h1>
+      <p class="sBody">Five questions and you're done. Everything after that runs off the answers — what you're on today, what lands next, what it pays, and whether the payslip is right.</p>
+      <div class="sFoot"><button class="solid" data-next>Start</button></div>
+    </div>
+
+    <div class="sStep" data-step="1">
+      <div class="sKick">Step 1 of 5</div>
+      <h1 class="sHead">Which roster are you on?</h1>
+      <p class="sBody">Pick the closest. You can fix individual days against the printed sheet in a second.</p>
+      <div class="presets" id="sPresets"></div>
+      <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
+    </div>
+
+    <div class="sStep" data-step="2">
+      <div class="sKick">Step 2 of 5</div>
+      <h1 class="sHead">When did day one land?</h1>
+      <p class="sBody">The first day of the pattern — the first shift after your last full break. Get this right and every date after it falls into place.</p>
+      <input type="date" id="sAnchor" class="bigDate" value="2026-08-17">
+      <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
+    </div>
+
+    <div class="sStep" data-step="3">
+      <div class="sKick">Step 3 of 5</div>
+      <h1 class="sHead">How are you employed?</h1>
+      <p class="sBody">Casual means the loading is inside your rate and nothing accrues. Permanent means leave builds up every swing.</p>
+      <div class="seg" role="group" style="margin-top:0">
+        <button id="sCasual" aria-pressed="true">Casual</button>
+        <button id="sPerm" aria-pressed="false">Permanent</button>
+      </div>
+      <div class="field" style="margin-top:18px"><label for="sStart">Started this job</label>
+        <input type="date" id="sStart" value="2026-08-17"></div>
+      <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
+    </div>
+
+    <div class="sStep" data-step="4">
+      <div class="sKick">Step 4 of 5</div>
+      <h1 class="sHead">What do they pay you?</h1>
+      <p class="sBody">Off your last payslip. This is what the forecast and the payslip check run on.</p>
+      <div class="field"><label for="sRate">Hourly rate</label>
+        <div><span class="unit">$</span><input type="number" id="sRate" value="85.14" step="0.01"></div></div>
+      <div class="field"><label for="sHours">Paid hours per shift</label>
+        <div><span class="unit">hrs</span><input type="number" id="sHours" value="12.5" step="0.25"></div></div>
+      <div class="field"><label for="sKm">Round trip to site</label>
+        <div><span class="unit">km</span><input type="number" id="sKm" value="260" step="10"></div></div>
+      <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
+    </div>
+
+    <div class="sStep" data-step="5">
+      <div class="sKick">Step 5 of 5</div>
+      <h1 class="sHead">Pick your look.</h1>
+      <p class="sBody">Night shift needs a screen that won't blind you at three in the morning. Day shift in the sun needs the opposite. Change it any time.</p>
+      <div class="themes" id="sThemes"></div>
+      <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" id="sDone">Open my roster</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="brandTop">The Ultimate</div>
+      <div class="brandBot">Shift Engine</div>
+    </div>
+    <button id="editBtn">Edit</button>
+  </header>
+
+  <nav role="tablist">
+    <button role="tab" aria-selected="true" data-tab="roster">Roster</button>
+    <button role="tab" aria-selected="false" data-tab="pay">Pay</button>
+    <button role="tab" aria-selected="false" data-tab="log">Log</button>
+    <button role="tab" aria-selected="false" data-tab="skills">Skills</button>
+    <button role="tab" aria-selected="false" data-tab="docs">Docs</button>
+  </nav>
+
+  <div class="panel on" id="tab-roster">
+    <div class="ringbox">
+      <svg class="ring" viewBox="0 0 300 300" id="ring"></svg>
+      <div class="core">
+        <div class="kicker" id="coreKicker">Today</div>
+        <div class="big" id="coreBig">—</div>
+        <div class="sub" id="coreSub"></div>
+      </div>
+    </div>
+    <div class="legend">
+      <div><i class="dot D"></i>Day</div><div><i class="dot N"></i>Night</div>
+      <div><i class="dot T"></i>Travel</div><div><i class="dot O"></i>Home</div>
+    </div>
+    <div class="strip">
+      <div class="cell"><div class="lab">Next change</div><div class="val" id="nextVal">—</div><div class="note" id="nextNote"></div></div>
+      <div class="cell"><div class="lab">Cycle position</div><div class="val" id="posVal">—</div><div class="note" id="posNote"></div></div>
+    </div>
+
+    <section>
+      <h2>Your roster</h2>
+      <div class="presets" id="presets"></div>
+      <p class="hint">Tap any day to change it — day, night, home, travel. Travel days sit inside your break: still your time, just spent driving.</p>
+      <div class="chips" id="chips"></div>
+      <div class="rowbtns">
+        <button class="ghost" id="addDay">Add day</button>
+        <button class="ghost" id="delDay">Remove day</button>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label for="anchor">Day 1 fell on</label>
+        <input type="date" id="anchor" value="2026-08-17">
+      </div>
+    </section>
+
+    <section>
+      <h2>Next six weeks</h2>
+      <ol class="up" id="upcoming"></ol>
+    </section>
+
+    <section>
+      <h2>Colour scheme</h2>
+      <p class="hint">Six to choose from. High Vis is built for reading in full sun; Pit Night and Cold Start are the easy ones on nights.</p>
+      <div class="themes" id="themes"></div>
+      <div class="rowbtns" style="margin-top:18px">
+        <button class="ghost" id="resetAll">Start over</button>
+      </div>
+      <p class="hint" id="saveState"></p>
+    </section>
+  </div>
+
+  <div class="panel" id="tab-pay">
+    <section>
+      <h2>How you're employed</h2>
+      <div class="seg" role="group">
+        <button id="segCasual" aria-pressed="true">Casual</button>
+        <button id="segPerm" aria-pressed="false">Permanent</button>
+      </div>
+      <p class="hint" id="empHint"></p>
+      <div class="field"><label for="rate">Hourly rate</label>
+        <div><span class="unit">$</span><input type="number" id="rate" value="85.14" step="0.01"></div></div>
+      <div class="field"><label for="hours">Paid hours per shift</label>
+        <div><span class="unit">hrs</span><input type="number" id="hours" value="12.5" step="0.25"></div></div>
+      <div class="field"><label for="superRate">Super</label>
+        <div><span class="unit">%</span><input type="number" id="superRate" value="12" step="0.5"></div></div>
+      <div class="field" id="leaveRow" style="display:none"><label for="alWeeks">Annual leave</label>
+        <select id="alWeeks"><option value="4">4 weeks</option><option value="5" selected>5 weeks (shiftworker)</option></select></div>
+
+      <div class="payhero">
+        <div class="lab">Gross per cycle</div>
+        <div class="amt" id="cycleAmt">—</div>
+        <div class="note" id="cycleNote" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
+      </div>
+      <div class="paygrid">
+        <div class="cell"><div class="lab">Annualised</div>
+          <div class="val mono" id="annAmt">—</div><div class="note" id="annNote"></div></div>
+        <div class="cell"><div class="lab">Super a year</div>
+          <div class="val mono" id="supAmt">—</div><div class="note">On top of the rate</div></div>
+      </div>
+    </section>
+
+    <section id="accrualSection" style="display:none">
+      <h2>Leave you're banking</h2>
+      <p class="hint">Builds on ordinary hours — 38 a week — not the full twelve and a half.</p>
+      <div class="paygrid">
+        <div class="cell"><div class="lab">Annual leave</div>
+          <div class="val mono" id="alCycle">—</div><div class="note" id="alNote"></div></div>
+        <div class="cell"><div class="lab">Personal leave</div>
+          <div class="val mono" id="plCycle">—</div><div class="note" id="plNote"></div></div>
+      </div>
+    </section>
+
+    <section id="countSection">
+      <h2>Going permanent</h2>
+      <div class="field"><label for="startDate">Started casual</label>
+        <input type="date" id="startDate" value="2026-08-17"></div>
+      <div class="count" style="margin-top:16px">
+        <div class="n" id="cdNum">—</div>
+        <div class="u" id="cdUnit">days until you can ask</div>
+        <div class="bar"><i id="cdBar" style="width:0%"></i></div>
+        <div class="when" id="cdWhen"></div>
+      </div>
+      <p class="hint" style="margin-top:16px">Six months in, you can put it in writing yourself — they don't have to offer it. They get 21 days to answer and can only knock it back on limited grounds.</p>
+    </section>
+  </div>
+
+  <div class="panel" id="tab-log">
+    <section>
+      <h2>Check the payslip</h2>
+      <p class="hint">Your pay runs off swipe in, swipe out. So does this. Put in what the gate recorded, then the gross off the payslip.</p>
+      <table><thead><tr><th>Shift</th><th>In</th><th>Out</th><th class="hrs">Hrs</th></tr></thead>
+        <tbody id="swipeBody"></tbody></table>
+      <div class="field" style="margin-top:16px">
+        <label for="slip">Payslip gross</label>
+        <div><span class="unit">$</span><input type="number" id="slip" value="0" step="0.01"></div>
+      </div>
+      <div class="verdict" id="verdict">
+        <div class="head" id="vHead">Enter your payslip gross</div>
+        <div class="body" id="vBody"></div>
+      </div>
+      <div class="warn">Payslips arrive by email. A later version reads them out of your inbox and runs this check without you typing anything.</div>
+    </section>
+
+    <section>
+      <h2>Travel &amp; camp</h2>
+      <div class="field"><label for="km">Round trip, home to site</label>
+        <div><span class="unit">km</span><input type="number" id="km" value="260" step="10"></div></div>
+      <div class="field"><label for="depTime">Leave home</label>
+        <div><input type="time" id="depTime" value="17:00"></div></div>
+      <div class="field"><label for="campTime">Camp check-in</label>
+        <div><input type="time" id="campTime" value="20:00"></div></div>
+      <div class="paygrid" style="margin-top:16px">
+        <div class="cell"><div class="lab">Km a year</div>
+          <div class="val mono" id="kmYear">—</div><div class="note" id="kmNote"></div></div>
+        <div class="cell"><div class="lab">Logged for tax</div>
+          <div class="val mono" id="kmClaim">—</div><div class="note">At 91c, capped at 5,000 km</div></div>
+      </div>
+      <div class="warn">Home-to-site driving is usually private commuting and not deductible. Keep the log anyway and let your accountant decide what's claimable.</div>
+    </section>
+  </div>
+
+  <div class="panel" id="tab-skills">
+    <section>
+      <h2>What you run</h2>
+      <div class="seg" role="group" style="margin-top:0">
+        <button id="skSingle" aria-pressed="false">Single skilled</button>
+        <button id="skMulti" aria-pressed="true">Multi skilled</button>
+      </div>
+      <p class="hint" id="skHint"></p>
+      <div class="machines" id="machines"></div>
+    </section>
+
+    <section id="hoursSec">
+      <h2>Hours on the seat</h2>
+      <p class="hint">The number every application asks for and nobody can remember. Update it at the end of a swing.</p>
+      <div id="hoursList"></div>
+    </section>
+
+    <section>
+      <h2>Tickets &amp; medicals</h2>
+      <p class="hint">Set your own dates. Anything inside 60 days goes amber, anything past goes red — so a lapsed medical never costs you a swing.</p>
+      <div id="ticketList"></div>
+      <div class="rowbtns"><button class="ghost" id="addTicket">Add a ticket</button></div>
+    </section>
+
+    <section>
+      <h2>Your operator profile</h2>
+      <p class="hint">This is what gets sent when a contractor asks what you can run.</p>
+      <div class="profile">
+        <div class="pl">Summary</div>
+        <div class="pv" id="profileOut"></div>
+      </div>
+      <div class="rowbtns" style="margin-top:12px"><button class="ghost" id="copyProfile">Copy to clipboard</button></div>
+    </section>
+  </div>
+
+  <div class="panel" id="tab-docs">
+    <section>
+      <h2>Site documents</h2>
+      <p class="hint">Your own copies — pre-starts, notes, tickets, anything you want at hand. Tag each one to a machine and it filters to what you run.</p>
+      <div class="machines" id="docFilter"></div>
+      <label class="drop" for="fileIn">Add a document<br><span class="mono" style="font-size:11px">PDF, image, anything</span></label>
+      <input type="file" id="fileIn" multiple style="display:none">
+      <ul class="plain" id="docList"></ul>
+      <div class="empty" id="docEmpty">Nothing loaded yet.</div>
+      <div class="warn">Site SOPs are controlled documents and belong in the company's system, where the version is guaranteed current. Keep your own copies here if you want them handy, but check the site copy before you act on one.</div>
+    </section>
+  </div>
+
+  <footer>Your settings are saved on this device only. Nothing is uploaded anywhere.</footer>
+</div>
+
+<script>
+(function(){
+  const ORDER=['D','N','O','T'];
+  const NAME={D:'Day shift',N:'Night shift',O:'Home',T:'Travel day'};
+  const SHORT={D:'D',N:'N',O:'H',T:'T'};
+  const CVAR={D:'var(--day)',N:'var(--night)',O:'var(--home)',T:'var(--travel)'};
+  const dayMs=86400000, $=id=>document.getElementById(id);
+
+  const THEMES=[
+    {id:'pit',n:'Pit Night',v:{bg:'#0C0A14',bg2:'#15111F',glow:'#241B3A',surface:'#1A1526','surface-2':'#241C33',
+      line:'#332A47',text:'#F3EEF9',muted:'#9B90B0',ink:'#1A1005',day:'#FFB62E',day2:'#FF7A45',
+      night:'#4CC9F0',night2:'#4361EE',off:'#2F5A4B',home:'#3DD9A0',travel:'#F7529A',bad:'#FF5F6D',good:'#3DD9A0'}},
+    {id:'dragline',n:'Dragline',v:{bg:'#0B0C0E',bg2:'#14171B',glow:'#1E242B',surface:'#171B21','surface-2':'#1F252D',
+      line:'#2E3742',text:'#EDF1F5',muted:'#8B97A5',ink:'#14120A',day:'#FFD100',day2:'#FF9E00',
+      night:'#5AA9E6',night2:'#2E5EAA',off:'#2C4A2C',home:'#5FD35F',travel:'#FF6B35',bad:'#FF5C5C',good:'#5FD35F'}},
+    {id:'bowen',n:'Red Dirt',v:{bg:'#120C09',bg2:'#1C1310',glow:'#33211A',surface:'#1F1613','surface-2':'#2A1E19',
+      line:'#3D2C24',text:'#F6EEE7',muted:'#A8938A',ink:'#1A0F06',day:'#F0A93F',day2:'#C4622B',
+      night:'#7FA8C9',night2:'#40638A',off:'#4A5A44',home:'#9CBF8E',travel:'#D45D3C',bad:'#E05A47',good:'#9CBF8E'}},
+    {id:'frost',n:'Cold Start',v:{bg:'#080D12',bg2:'#101820',glow:'#1A2733',surface:'#131C25','surface-2':'#1B2733',
+      line:'#2A3A47',text:'#EAF2F8',muted:'#86A0B3',ink:'#04110D',day:'#7DE2D1',day2:'#34BE82',
+      night:'#6C8EFF',night2:'#3B5BDB',off:'#2A4A48',home:'#A0E7E5',travel:'#FF8FAB',bad:'#FF7A8A',good:'#7DE2D1'}},
+    {id:'hivis',n:'High Vis',v:{bg:'#000000',bg2:'#0A0A0A',glow:'#1A1A00',surface:'#121212','surface-2':'#1C1C1C',
+      line:'#3A3A3A',text:'#FFFFFF',muted:'#A8A8A8',ink:'#000000',day:'#FFEE00',day2:'#FFB000',
+      night:'#00E5FF',night2:'#0091EA',off:'#1E4A2E',home:'#00FF87',travel:'#FF3D71',bad:'#FF3D71',good:'#00FF87'}},
+    {id:'daylight',n:'Daylight',v:{bg:'#E9EDF3',bg2:'#F7F9FC',glow:'#DDE5F0',surface:'#FFFFFF','surface-2':'#F2F5FA',
+      line:'#D3DCE8',text:'#101720',muted:'#5E6B7E',ink:'#FFFFFF',day:'#E07B00',day2:'#C25100',
+      night:'#1B6FD4',night2:'#0B4CA1',off:'#B8D4C6',home:'#0E8F5E',travel:'#C7256B',bad:'#C22B2B',good:'#0E8F5E'}}
+  ];
+  let themeIdx=0;
+  function applyTheme(i){
+    themeIdx=i;
+    const v=THEMES[i].v, r=document.documentElement;
+    Object.keys(v).forEach(k=>r.style.setProperty('--'+k,v[k]));
+    renderThemes();
+  }
+  function themeCard(t,i,onPick){
+    const b=document.createElement('button');
+    b.className='theme';b.setAttribute('aria-pressed',i===themeIdx);
+    b.innerHTML='<div class="sw">'+
+      ['day','night','travel','home'].map(k=>'<i style="background:'+t.v[k]+'"></i>').join('')+
+      '</div><div class="tn">'+t.n+'</div>';
+    b.style.background=t.v.surface;b.style.borderColor=i===themeIdx?t.v.day:t.v.line;
+    b.querySelector('.tn').style.color=i===themeIdx?t.v.text:t.v.muted;
+    b.addEventListener('click',()=>onPick(i));
+    return b;
+  }
+  function renderThemes(){
+    [['themes',null],['sThemes',null]].forEach(([id])=>{
+      const box=$(id);if(!box)return;box.innerHTML='';
+      THEMES.forEach((t,i)=>box.appendChild(themeCard(t,i,applyTheme)));
+    });
+  }
+
+  const PRESETS=[
+    {n:'Lifestyle 4/5 5/4 5/5', p:'DDNNOOOOTDDNNNOOOTDDDNNOOOOT'},
+    {n:'7/7 days',              p:'DDDDDDDOOOOOOO'},
+    {n:'7/7 day & night',       p:'DDDDDDDOOOOOOONNNNNNNOOOOOOO'},
+    {n:'2/2/3',                 p:'DDOONNNOODDNNOO'.slice(0,14)},
+    {n:'14/7',                  p:'DDDDDDDNNNNNNNOOOOOOO'},
+    {n:'8/6',                   p:'DDDDNNNNOOOOOO'},
+    {n:'9/5',                   p:'DDDDDNNNNOOOOO'}
+  ];
+  let pattern=PRESETS[0].p.split('');
+  let presetIdx=0, casual=true, swipes=null, docs=[];
+
+  const today=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())};
+  const anchorDate=()=>{const v=$('anchor').value.split('-').map(Number);return new Date(v[0],v[1]-1,v[2])};
+  const idxFor=d=>{const n=pattern.length;return((Math.round((d-anchorDate())/dayMs)%n)+n)%n};
+  const dateFor=i=>{const t=today();let d=i-idxFor(t);if(d<0)d+=pattern.length;return new Date(t.getTime()+d*dayMs)};
+  const fmt=d=>d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+  const money=n=>'$'+n.toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0});
+  const money2=n=>'$'+n.toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  /* setup wizard */
+  let step=0;
+  function showStep(n){
+    step=n;
+    document.querySelectorAll('.sStep').forEach(s=>s.classList.toggle('on',+s.dataset.step===n));
+    document.querySelectorAll('.steps i').forEach((b,i)=>b.classList.toggle('on',i<Math.max(1,n)));
+    $('setup').scrollTop=0;
+  }
+  function renderSetupPresets(){
+    const box=$('sPresets');box.innerHTML='';
+    PRESETS.forEach((p,i)=>{
+      const b=document.createElement('button');
+      b.className='preset';b.textContent=p.n;b.setAttribute('aria-pressed',i===presetIdx);
+      b.addEventListener('click',()=>{presetIdx=i;pattern=p.p.split('');renderSetupPresets()});
+      box.appendChild(b);
+    });
+  }
+  document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>showStep(step+1)));
+  document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>showStep(step-1)));
+  $('sCasual').addEventListener('click',()=>{$('sCasual').setAttribute('aria-pressed','true');$('sPerm').setAttribute('aria-pressed','false')});
+  $('sPerm').addEventListener('click',()=>{$('sPerm').setAttribute('aria-pressed','true');$('sCasual').setAttribute('aria-pressed','false')});
+  $('sDone').addEventListener('click',()=>{
+    $('anchor').value=$('sAnchor').value;$('startDate').value=$('sStart').value;
+    $('rate').value=$('sRate').value;$('hours').value=$('sHours').value;$('km').value=$('sKm').value;
+    setEmployment($('sCasual').getAttribute('aria-pressed')==='true');
+    swipes=null;renderAll();$('setup').classList.add('hide');
+  });
+  $('editBtn').addEventListener('click',()=>{
+    $('sAnchor').value=$('anchor').value;$('sStart').value=$('startDate').value;
+    $('sRate').value=$('rate').value;$('sHours').value=$('hours').value;$('sKm').value=$('km').value;
+    $('sCasual').setAttribute('aria-pressed',casual);$('sPerm').setAttribute('aria-pressed',!casual);
+    renderSetupPresets();renderThemes();$('setup').classList.remove('hide');showStep(1);
+  });
+
+  document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected','false'));
+    b.setAttribute('aria-selected','true');
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+    $('tab-'+b.dataset.tab).classList.add('on');window.scrollTo(0,0);
+  }));
+
+  /* ring */
+  function arc(r,a0,a1){
+    const p=a=>[150+r*Math.cos(a*Math.PI/180),150+r*Math.sin(a*Math.PI/180)];
+    const[x0,y0]=p(a0),[x1,y1]=p(a1);
+    return `M ${x0} ${y0} A ${r} ${r} 0 ${(a1-a0)>180?1:0} 1 ${x1} ${y1}`;
+  }
+  const GRAD=`<defs>
+    <linearGradient id="gD" gradientUnits="userSpaceOnUse" x1="40" y1="40" x2="260" y2="260">
+      <stop offset="0" stop-color="var(--day)"/><stop offset="1" stop-color="var(--day2)"/></linearGradient>
+    <linearGradient id="gN" gradientUnits="userSpaceOnUse" x1="40" y1="40" x2="260" y2="260">
+      <stop offset="0" stop-color="var(--night)"/><stop offset="1" stop-color="var(--night2)"/></linearGradient>
+    <linearGradient id="gT" gradientUnits="userSpaceOnUse" x1="40" y1="40" x2="260" y2="260">
+      <stop offset="0" stop-color="var(--travel)"/><stop offset="1" stop-color="var(--night2)"/></linearGradient>
+  </defs>`;
+  const STROKE={D:'url(#gD)',N:'url(#gN)',T:'url(#gT)',O:'var(--off)'};
+
+  function drawRing(){
+    const svg=$('ring'),n=pattern.length,ti=idxFor(today());
+    const stepA=360/n,gap=Math.min(1.6,stepA*0.16);
+    let s=GRAD;
+    pattern.forEach((t,i)=>{
+      s+=`<path d="${arc(110,-90+i*stepA+gap,-90+(i+1)*stepA-gap)}" stroke="${STROKE[t]}" `+
+         `stroke-width="${t==='O'?15:25}" fill="none" data-i="${i}" class="${i===ti?'':'dim'}"/>`;
+    });
+    const every=n>32?2:1;
+    pattern.forEach((t,i)=>{
+      if(i%every)return;
+      const a=(-90+(i+0.5)*stepA)*Math.PI/180;
+      s+=`<text x="${150+134*Math.cos(a)}" y="${150+134*Math.sin(a)}" text-anchor="middle" `+
+         `dominant-baseline="central" class="${i===ti?'now':''}">${dateFor(i).getDate()}</text>`;
+    });
+    svg.innerHTML=s;
+    svg.querySelectorAll('path').forEach(p=>p.addEventListener('click',()=>peek(+p.dataset.i)));
+  }
+  let peekTimer=null;
+  function peek(i){
+    $('coreKicker').textContent='Day '+(i+1)+' of '+pattern.length;
+    $('coreBig').textContent=NAME[pattern[i]].split(' ')[0];
+    $('coreBig').style.color=CVAR[pattern[i]];
+    $('coreSub').textContent=fmt(dateFor(i));
+    clearTimeout(peekTimer);peekTimer=setTimeout(renderCore,3200);
+  }
+  function renderCore(){
+    const t=today(),i=idxFor(t),type=pattern[i];
+    let ahead=1;
+    while(ahead<400&&pattern[(i+ahead)%pattern.length]===type)ahead++;
+    const nextType=pattern[(i+ahead)%pattern.length];
+    $('coreKicker').textContent='Today';
+    $('coreBig').textContent=NAME[type].split(' ')[0];
+    $('coreBig').style.color=CVAR[type];
+    $('coreSub').textContent= type==='O'?(ahead===1?'Last day home':ahead+' days home left')
+      : type==='T'?'On the road tonight' : 'Day '+(i+1)+' of the cycle';
+    $('nextVal').textContent=NAME[nextType];
+    $('nextNote').textContent=(ahead===1?'Tomorrow — ':'In '+ahead+' days — ')+fmt(new Date(t.getTime()+ahead*dayMs));
+    $('posVal').textContent=(i+1)+' / '+pattern.length;
+    const home=pattern.filter(x=>x==='O'||x==='T').length;
+    const trav=pattern.filter(x=>x==='T').length;
+    $('posNote').textContent=home+' days home'+(trav?' ('+trav+' spent driving)':'');
+  }
+  function renderPresets(){
+    const box=$('presets');box.innerHTML='';
+    PRESETS.forEach((p,i)=>{
+      const b=document.createElement('button');
+      b.className='preset';b.textContent=p.n;b.setAttribute('aria-pressed',i===presetIdx);
+      b.addEventListener('click',()=>{presetIdx=i;pattern=p.p.split('');swipes=null;renderAll()});
+      box.appendChild(b);
+    });
+  }
+  function renderChips(){
+    const box=$('chips'),ti=idxFor(today());box.innerHTML='';
+    pattern.forEach((t,i)=>{
+      const b=document.createElement('button');
+      b.className='chip '+t+(i===ti?' today':'');
+      b.innerHTML='<span>'+dateFor(i).getDate()+'</span>'+SHORT[t];
+      b.setAttribute('aria-label',fmt(dateFor(i))+': '+NAME[t]);
+      b.addEventListener('click',()=>{pattern[i]=ORDER[(ORDER.indexOf(pattern[i])+1)%4];presetIdx=-1;swipes=null;renderAll()});
+      box.appendChild(b);
+    });
+  }
+  function renderUpcoming(){
+    const list=$('upcoming');list.innerHTML='';
+    const t=today();let run=null;
+    for(let k=0;k<42;k++){
+      const d=new Date(t.getTime()+k*dayMs),type=pattern[idxFor(d)];
+      if(run&&run.type===type){run.len++;run.end=d;continue}
+      if(run)push(run);run={type,start:d,end:d,len:1};
+    }
+    if(run)push(run);
+    function push(r){
+      const li=document.createElement('li');
+      const span=r.len===1?fmt(r.start):fmt(r.start)+' – '+fmt(r.end);
+      const label=r.type==='O'?'Home':NAME[r.type]+(r.len>1?'s':'');
+      li.innerHTML='<i class="dot '+r.type+'"></i><span class="upday">'+r.len+(r.len===1?' day':' days')+
+        '</span><span class="upname">'+label+'</span><span class="upmeta">'+span.replace(/,/g,'')+'</span>';
+      list.appendChild(li);
+    }
+  }
+
+  function setEmployment(isCasual){
+    casual=isCasual;
+    $('segCasual').setAttribute('aria-pressed',isCasual);
+    $('segPerm').setAttribute('aria-pressed',!isCasual);
+    $('leaveRow').style.display=isCasual?'none':'flex';
+    $('accrualSection').style.display=isCasual?'none':'block';
+    $('countSection').style.display=isCasual?'block':'none';
+    $('empHint').textContent=isCasual
+      ?'Flat rate, loading baked in, nothing accrues. No paid leave and the roster can change on you.'
+      :'Lower headline rate, but leave builds up every swing.';
+    renderPay();
+  }
+  function renderPay(){
+    const rate=+$('rate').value||0,hrs=+$('hours').value||0,sup=+$('superRate').value||0;
+    const shifts=pattern.filter(t=>t==='D'||t==='N').length;
+    const cycleHours=shifts*hrs, cycleGross=cycleHours*rate;
+    const cyclesYr=365.25/pattern.length, perYear=cycleGross*cyclesYr;
+    $('cycleAmt').textContent=money(cycleGross);
+    $('cycleNote').textContent=shifts+' shifts · '+cycleHours.toFixed(1)+' hours · '+pattern.length+' days';
+    $('annAmt').textContent=money(perYear);
+    $('annNote').textContent=cyclesYr.toFixed(1)+' cycles a year';
+    $('supAmt').textContent=money(perYear*sup/100);
+    const ordCycle=Math.min(cycleHours,38*(pattern.length/7));
+    const alWeeks=+$('alWeeks').value||4;
+    const alH=ordCycle*(alWeeks/52), plH=ordCycle*(76/1976);
+    $('alCycle').textContent=alH.toFixed(1)+' hrs';
+    $('alNote').textContent='per cycle · '+(alH*cyclesYr).toFixed(0)+' hrs a year';
+    $('plCycle').textContent=plH.toFixed(1)+' hrs';
+    $('plNote').textContent='per cycle · '+(plH*cyclesYr).toFixed(0)+' hrs a year';
+    renderCountdown();renderTravel();
+  }
+  function renderCountdown(){
+    const v=$('startDate').value.split('-').map(Number);
+    const start=new Date(v[0],v[1]-1,v[2]);
+    const elig=new Date(start.getFullYear(),start.getMonth()+6,start.getDate());
+    const t=today(), total=Math.round((elig-start)/dayMs), left=Math.round((elig-t)/dayMs);
+    $('cdBar').style.width=Math.max(0,Math.min(100,((total-left)/total)*100)).toFixed(1)+'%';
+    if(left>0){
+      $('cdNum').textContent=left;
+      $('cdUnit').textContent=left===1?'day until you can ask':'days until you can ask';
+      $('cdWhen').textContent='Eligible '+elig.toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})+
+        ' — that\u2019s '+(Math.round(left/pattern.length*10)/10)+' more cycles.';
+    }else{
+      $('cdNum').textContent='Now';$('cdUnit').textContent='you can put it in writing';
+      $('cdWhen').textContent='You passed six months on '+elig.toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})+'.';
+    }
+  }
+
+  function buildSwipes(){
+    const t=today(),out=[];
+    for(let k=1;k<=pattern.length&&out.length<8;k++){
+      const d=new Date(t.getTime()-k*dayMs),ty=pattern[idxFor(d)];
+      if(ty==='D'||ty==='N')out.unshift({date:d,type:ty,in:ty==='D'?'06:30':'18:30',out:ty==='D'?'19:00':'07:00'});
+      else if(out.length)break;
+    }
+    if(!out.length)for(let k=0;k<pattern.length&&out.length<8;k++){
+      const d=new Date(t.getTime()+k*dayMs),ty=pattern[idxFor(d)];
+      if(ty==='D'||ty==='N')out.push({date:d,type:ty,in:ty==='D'?'06:30':'18:30',out:ty==='D'?'19:00':'07:00'});
+      else if(out.length)break;
+    }
+    return out;
+  }
+  const spanHrs=(a,b)=>{const p=s=>{const[h,m]=s.split(':').map(Number);return h*60+m};
+    let d=p(b)-p(a);if(d<=0)d+=1440;return d/60};
+  function renderSwipes(){
+    if(!swipes)swipes=buildSwipes();
+    const body=$('swipeBody');body.innerHTML='';
+    swipes.forEach((s,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML='<td><i class="dot '+s.type+'" style="display:inline-block;margin-right:7px"></i>'+
+        s.date.toLocaleDateString('en-AU',{day:'numeric',month:'short'})+'</td>'+
+        '<td><input type="time" value="'+s.in+'" data-i="'+i+'" data-k="in"></td>'+
+        '<td><input type="time" value="'+s.out+'" data-i="'+i+'" data-k="out"></td>'+
+        '<td class="hrs">'+spanHrs(s.in,s.out).toFixed(2)+'</td>';
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',e=>{
+      swipes[+e.target.dataset.i][e.target.dataset.k]=e.target.value;renderSwipes();
+    }));
+    checkSlip();
+  }
+  function checkSlip(){
+    const rate=+$('rate').value||0;
+    const total=swipes.reduce((a,s)=>a+spanHrs(s.in,s.out),0);
+    const expect=total*rate, slip=+$('slip').value||0, v=$('verdict');
+    if(!slip){
+      v.className='verdict';$('vHead').textContent='Expected '+money2(expect);
+      $('vBody').textContent=swipes.length+' shifts · '+total.toFixed(2)+' hours at '+money2(rate)+'.';return;
+    }
+    const diff=slip-expect;
+    if(Math.abs(diff)<1){
+      v.className='verdict ok';$('vHead').textContent='Payslip checks out';
+      $('vBody').textContent=total.toFixed(2)+' hours at '+money2(rate)+' comes to '+money2(expect)+'. Nothing to chase.';
+    }else{
+      v.className='verdict bad';
+      $('vHead').textContent=(diff<0?'Short by ':'Over by ')+money2(Math.abs(diff));
+      $('vBody').textContent='Your swipes total '+total.toFixed(2)+' hours, worth '+money2(expect)+
+        '. The payslip says '+money2(slip)+' — a gap of '+(Math.abs(diff)/rate).toFixed(2)+' hours.';
+    }
+  }
+  function renderTravel(){
+    const km=+$('km').value||0, trips=pattern.filter(t=>t==='T').length;
+    const cyclesYr=365.25/pattern.length, kmYr=trips*km*cyclesYr;
+    $('kmYear').textContent=Math.round(kmYr).toLocaleString('en-AU');
+    $('kmNote').textContent=trips?trips+' trips a cycle':'no travel days set';
+    $('kmClaim').textContent=money(Math.min(kmYr,5000)*0.91);
+  }
+
+
+  /* ================= SKILLS ================= */
+  const MACHINES=['Haul truck','Excavator','Dozer','Grader','Loader','Water cart',
+                  'Drill','Scraper','Service truck','Light vehicle','Dragline','Float'];
+  let myMachines={'Haul truck':4200,'Excavator':1800,'Dozer':950,'Water cart':600};
+  let multi=true;
+  let tickets=[
+    {n:'Standard 11 (coal induction)', d:'2028-03-14'},
+    {n:'Coal board medical',           d:'2026-10-02'},
+    {n:'HR licence',                   d:'2029-06-30'},
+    {n:'First aid & CPR',              d:'2026-08-09'}
+  ];
+  let docFilterMachine=null;
+
+  function setSkillMode(isMulti){
+    multi=isMulti;
+    $('skMulti').setAttribute('aria-pressed',isMulti);
+    $('skSingle').setAttribute('aria-pressed',!isMulti);
+    $('skHint').textContent=isMulti
+      ? 'Tap everything you are signed off on. Multi skilled means you get moved around, so the app keeps hours separately for each machine.'
+      : 'Pick the one machine you run. Everything else stays out of your way.';
+    if(!isMulti){
+      const keep=Object.keys(myMachines)[0];
+      myMachines = keep ? {[keep]:myMachines[keep]} : {};
+    }
+    renderSkills();
+  }
+  function renderMachines(){
+    const box=$('machines');box.innerHTML='';
+    MACHINES.forEach(m=>{
+      const b=document.createElement('button');
+      b.className='mach';b.textContent=m;
+      b.setAttribute('aria-pressed', m in myMachines);
+      b.addEventListener('click',()=>{
+        if(m in myMachines){delete myMachines[m];}
+        else{ if(!multi) myMachines={}; myMachines[m]=0; }
+        renderSkills();
+      });
+      box.appendChild(b);
+    });
+  }
+  function renderHours(){
+    const box=$('hoursList');box.innerHTML='';
+    const keys=Object.keys(myMachines);
+    if(!keys.length){box.innerHTML='<div class="empty">Pick a machine above and its hours show up here.</div>';return}
+    keys.forEach(m=>{
+      const row=document.createElement('div');
+      row.className='hourRow';
+      row.innerHTML='<span class="mn">'+m+'</span>'+
+        '<input type="number" step="50" value="'+myMachines[m]+'" data-m="'+m+'">'+
+        '<span class="hu">hrs</span>';
+      row.querySelector('input').addEventListener('input',e=>{
+        myMachines[m]=+e.target.value||0;renderProfile();
+      });
+      box.appendChild(row);
+    });
+  }
+  function ticketState(dstr){
+    if(!dstr) return {cls:'warn',txt:'no date set',days:null};
+    const v=dstr.split('-').map(Number);
+    const d=new Date(v[0],v[1]-1,v[2]);
+    const days=Math.round((d-today())/dayMs);
+    if(days<0)  return {cls:'exp', txt:'expired '+Math.abs(days)+' days ago',days};
+    if(days<=60)return {cls:'warn',txt:'due in '+days+' days',days};
+    return {cls:'ok',txt:'current · '+days+' days left',days};
+  }
+  function renderTickets(){
+    const box=$('ticketList');box.innerHTML='';
+    tickets.forEach((t,i)=>{
+      const st=ticketState(t.d);
+      const row=document.createElement('div');
+      row.className='tick';
+      row.innerHTML='<div class="tn2">'+t.n+'<div class="td '+st.cls+'">'+st.txt+'</div></div>'+
+        '<input type="date" value="'+t.d+'" data-i="'+i+'">';
+      row.querySelector('input').addEventListener('input',e=>{
+        tickets[+e.target.dataset.i].d=e.target.value;renderTickets();renderProfile();
+      });
+      box.appendChild(row);
+    });
+  }
+  $('addTicket').addEventListener('click',()=>{
+    const n=prompt('What ticket or medical?');
+    if(n){tickets.push({n:n,d:''});renderTickets();renderProfile();}
+  });
+  function renderProfile(){
+    const keys=Object.keys(myMachines);
+    const total=keys.reduce((a,k)=>a+myMachines[k],0);
+    const machTxt=keys.length
+      ? keys.map(k=>'<b>'+k+'</b> '+myMachines[k].toLocaleString('en-AU')+' hrs').join(' · ')
+      : 'No machines selected yet.';
+    const bad=tickets.filter(t=>['exp','warn'].includes(ticketState(t.d).cls));
+    const current=tickets.filter(t=>ticketState(t.d).cls==='ok').length;
+    let s2='<b>'+(multi?'Multi skilled operator':'Operator')+'</b><br>'+machTxt;
+    if(keys.length) s2+='<br><br><b>'+total.toLocaleString('en-AU')+'</b> total seat hours across '+keys.length+' machine'+(keys.length>1?'s':'');
+    s2+='<br>'+current+' of '+tickets.length+' tickets current';
+    if(bad.length) s2+=' — <b>'+bad.map(t=>t.n).join(', ')+'</b> '+(bad.length>1?'need':'needs')+' attention';
+    $('profileOut').innerHTML=s2;
+  }
+  $('copyProfile').addEventListener('click',()=>{
+    const txt=$('profileOut').innerText;
+    navigator.clipboard&&navigator.clipboard.writeText(txt);
+    $('copyProfile').textContent='Copied';
+    setTimeout(()=>$('copyProfile').textContent='Copy to clipboard',1600);
+  });
+  function renderDocFilter(){
+    const box=$('docFilter');if(!box)return;box.innerHTML='';
+    const keys=Object.keys(myMachines);
+    if(!keys.length){box.innerHTML='<span class="fmeta">Add machines on the Skills tab to filter by them.</span>';return}
+    const all=document.createElement('button');
+    all.className='mach';all.textContent='All';all.setAttribute('aria-pressed',docFilterMachine===null);
+    all.addEventListener('click',()=>{docFilterMachine=null;renderDocFilter();renderDocs()});
+    box.appendChild(all);
+    keys.forEach(m=>{
+      const b=document.createElement('button');
+      b.className='mach';b.textContent=m;b.setAttribute('aria-pressed',docFilterMachine===m);
+      b.addEventListener('click',()=>{docFilterMachine=(docFilterMachine===m?null:m);renderDocFilter();renderDocs()});
+      box.appendChild(b);
+    });
+  }
+  function renderSkills(){renderMachines();renderHours();renderTickets();renderProfile();renderDocFilter();renderDocs()}
+  $('skMulti').addEventListener('click',()=>setSkillMode(true));
+  $('skSingle').addEventListener('click',()=>setSkillMode(false));
+
+  $('fileIn').addEventListener('change',e=>{
+    const keys=Object.keys(myMachines);
+    [...e.target.files].forEach(f=>docs.push({name:f.name,size:f.size,url:URL.createObjectURL(f),
+      machine:keys.length?(docFilterMachine||keys[0]):null}));
+    renderDocs();e.target.value='';
+  });
+  function renderDocs(){
+    const ul=$('docList');ul.innerHTML='';
+    const shown=docs.filter(d=>!docFilterMachine||d.machine===docFilterMachine);
+    $('docEmpty').style.display=shown.length?'none':'block';
+    $('docEmpty').textContent=docs.length?'Nothing tagged to that machine.':'Nothing loaded yet.';
+    shown.forEach(d=>{
+      const li=document.createElement('li');
+      li.innerHTML='<span class="fname">'+d.name+
+        (d.machine?'<div class="fmeta">'+d.machine+'</div>':'')+'</span><span class="fmeta">'+
+        (d.size>1048576?(d.size/1048576).toFixed(1)+' MB':Math.round(d.size/1024)+' KB')+
+        '</span><a class="open" href="'+d.url+'" target="_blank" rel="noopener">Open</a>';
+      ul.appendChild(li);
+    });
+  }
+
+  function renderAll(){drawRing();renderCore();renderPresets();renderChips();renderUpcoming();renderPay();renderSwipes()}
+
+  $('addDay').addEventListener('click',()=>{pattern.push('O');presetIdx=-1;swipes=null;renderAll()});
+  $('delDay').addEventListener('click',()=>{if(pattern.length>2){pattern.pop();presetIdx=-1;swipes=null;renderAll()}});
+  $('segCasual').addEventListener('click',()=>setEmployment(true));
+  $('segPerm').addEventListener('click',()=>setEmployment(false));
+  ['anchor','rate','hours','superRate','alWeeks','km','startDate'].forEach(id=>
+    $(id).addEventListener('input',()=>{swipes=null;renderAll()}));
+  $('slip').addEventListener('input',checkSlip);
+
+  renderSetupPresets();renderThemes();showStep(0);
+
+  /* ================= SAVING ================= */
+  const KEY='ultimate-shift-engine.v1';
+  let ready=false;
+  function snapshot(){
+    return {
+      pattern:pattern.join(''), presetIdx, casual, multi, themeIdx,
+      anchor:$('anchor').value, startDate:$('startDate').value,
+      rate:$('rate').value, hours:$('hours').value, superRate:$('superRate').value,
+      alWeeks:$('alWeeks').value, km:$('km').value,
+      depTime:$('depTime').value, campTime:$('campTime').value,
+      machines:myMachines, tickets
+    };
+  }
+  function save(){
+    if(!ready) return;
+    try{ localStorage.setItem(KEY, JSON.stringify(snapshot()));
+         $('saveState').textContent='Saved on this device.'; }
+    catch(e){ $('saveState').textContent='Storage is blocked here — settings will reset on reload. Works normally once the app is hosted on a real address.'; }
+  }
+  function load(){
+    let raw=null;
+    try{ raw=localStorage.getItem(KEY); }catch(e){ return false; }
+    if(!raw) return false;
+    let d; try{ d=JSON.parse(raw); }catch(e){ return false; }
+    if(d.pattern) pattern=d.pattern.split('');
+    if(typeof d.presetIdx==='number') presetIdx=d.presetIdx;
+    if(d.machines) myMachines=d.machines;
+    if(Array.isArray(d.tickets)&&d.tickets.length) tickets=d.tickets;
+    ['anchor','startDate','rate','hours','superRate','alWeeks','km','depTime','campTime']
+      .forEach(k=>{ if(d[k]!==undefined&&$(k)) $(k).value=d[k]; });
+    if(typeof d.themeIdx==='number') applyTheme(d.themeIdx);
+    setEmployment(d.casual!==false);
+    setSkillMode(d.multi!==false);
+    return true;
+  }
+  $('resetAll').addEventListener('click',()=>{
+    if(!confirm('Clear everything and run setup again?')) return;
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    location.reload();
+  });
+
+  /* ================= BOOT ================= */
+  const restored = load();
+  if(restored){
+    $('setup').classList.add('hide');
+    renderAll();
+    $('saveState').textContent='Saved on this device.';
+  }else{
+    setEmployment(true); renderAll(); setSkillMode(true);
+    $('saveState').textContent='Nothing saved yet — finish setup and it sticks.';
+  }
+  ready=true;
+
+  // save on any change
+  document.addEventListener('input', save, true);
+  document.addEventListener('click', ()=>setTimeout(save,60), true);
+
+  // offline support once hosted
+  if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+
+})();
+</script>
