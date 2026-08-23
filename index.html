@@ -239,6 +239,32 @@
     text-transform:uppercase;color:var(--muted)}
   .profile .pv{font-size:14px;line-height:1.6;margin-top:8px}
   .profile .pv b{font-variation-settings:'wght' 700}
+
+  /* ---- fatigue ---- */
+  .fatigue{border:1px solid var(--bad);border-radius:4px;padding:16px 15px;margin:0 0 24px;
+    background:linear-gradient(150deg,color-mix(in srgb,var(--bad) 16%,transparent),var(--surface))}
+  .fatigue h3{margin:0;font-variation-settings:'wdth' 106,'wght' 800;font-size:19px;line-height:1.2}
+  .fatigue p{font-size:13.5px;color:var(--text);opacity:.86;line-height:1.55;margin:9px 0 0}
+  .fatigue ul{margin:11px 0 0;padding-left:17px;font-size:13.5px;line-height:1.6;opacity:.86}
+  .fatigue .lab{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--bad);margin-bottom:7px}
+  .fatigue.hide{display:none}
+
+  /* ---- anchor nudge ---- */
+  .nudge{display:flex;gap:8px;margin-top:10px}
+  .nudge button{flex:1;background:transparent;border:1px solid var(--line);color:var(--muted);
+    border-radius:4px;padding:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer}
+  .nudge button:hover{color:var(--text);border-color:var(--muted)}
+  .checkline{font-size:13px;color:var(--muted);margin-top:11px;line-height:1.5}
+  .checkline b{color:var(--text);font-variation-settings:'wght' 700}
+
+  /* ---- share / view mode ---- */
+  .shareBox{background:linear-gradient(150deg,var(--surface-2),var(--surface));
+    border:1px solid var(--line);border-left:3px solid var(--night);border-radius:4px;padding:16px 15px}
+  .viewBanner{background:color-mix(in srgb,var(--night) 18%,transparent);border:1px solid var(--night);
+    border-radius:4px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.5}
+  body.viewmode nav,body.viewmode #shareSec,body.viewmode #patternSec,
+  body.viewmode #themeSec,body.viewmode #editBtn{display:none!important}
   footer{border-top:1px solid var(--line);padding-top:16px;margin-top:8px;font-size:12px;color:var(--muted)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -266,8 +292,14 @@
     <div class="sStep" data-step="2">
       <div class="sKick">Step 2 of 5</div>
       <h1 class="sHead">When did day one land?</h1>
-      <p class="sBody">The first day of the pattern — the first shift after your last full break. Get this right and every date after it falls into place.</p>
+      <p class="sBody">The first shift after your longest break. This is the one thing the whole app hangs off — a 28-day cycle or a 7/7 day-and-night rotation only lines up if this date is right.</p>
       <input type="date" id="sAnchor" class="bigDate" value="2026-08-17">
+      <div class="checkline" id="sAnchorCheck"></div>
+      <div class="nudge">
+        <button id="sNudgeBack">&#9664; A day earlier</button>
+        <button id="sNudgeFwd">A day later &#9654;</button>
+      </div>
+      <p class="hint">Not sure? Set it roughly, then nudge until the line above matches what you're actually doing today.</p>
       <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
     </div>
 
@@ -326,6 +358,18 @@
   </nav>
 
   <div class="panel on" id="tab-roster">
+    <div class="viewBanner" id="viewBanner" style="display:none"></div>
+    <div class="fatigue hide" id="fatigue">
+      <div class="lab">Before you drive</div>
+      <h3>You're finishing on nights.</h3>
+      <p>Seventeen hours awake slows your reactions about as much as a 0.05 blood alcohol reading. Twenty-four hours is closer to 0.10. After a night shift you're at the bottom of your body clock, on a quiet road, in the worst part of the day for it — and the first sign of a microsleep is usually waking up.</p>
+      <ul>
+        <li>Sleep before you drive, not after. Even a few hours at camp beats pushing through.</li>
+        <li>If you must go, a 20 minute nap and a coffee first buys you about an hour — no more.</li>
+        <li>Share the driving, or wear the extra night and leave in daylight.</li>
+        <li>Pulling over for a sleep is never the wrong call.</li>
+      </ul>
+    </div>
     <div class="ringbox">
       <svg class="ring" viewBox="0 0 300 300" id="ring"></svg>
       <div class="core">
@@ -343,7 +387,7 @@
       <div class="cell"><div class="lab">Cycle position</div><div class="val" id="posVal">—</div><div class="note" id="posNote"></div></div>
     </div>
 
-    <section>
+    <section id="patternSec">
       <h2>Your roster</h2>
       <div class="presets" id="presets"></div>
       <p class="hint">Tap any day to change it — day, night, home, travel. Travel days sit inside your break: still your time, just spent driving.</p>
@@ -356,6 +400,12 @@
         <label for="anchor">Day 1 fell on</label>
         <input type="date" id="anchor" value="2026-08-17">
       </div>
+      <div class="checkline" id="anchorCheck"></div>
+      <div class="nudge">
+        <button id="nudgeBack">&#9664; Shift back a day</button>
+        <button id="nudgeFwd">Shift forward a day &#9654;</button>
+      </div>
+      <p class="hint">Day 1 is the first shift after your longest break. If the line above doesn't match where you actually are today, nudge it until it does.</p>
     </section>
 
     <section>
@@ -363,7 +413,21 @@
       <ol class="up" id="upcoming"></ol>
     </section>
 
-    <section>
+    <section id="shareSec">
+      <h2>Share your roster</h2>
+      <p class="hint">Sends the roster only — dates on and dates home. No pay, no tickets, no hours. Whoever opens it gets a read-only copy that stays right as the cycle rolls over.</p>
+      <div class="shareBox">
+        <div class="rowbtns" style="margin-top:0">
+          <button class="ghost" id="shareLink">Send a link</button>
+        </div>
+        <div class="rowbtns">
+          <button class="ghost" id="shareText">Copy as a message</button>
+        </div>
+        <p class="hint" id="shareMsg" style="margin-bottom:0"></p>
+      </div>
+    </section>
+
+    <section id="themeSec">
       <h2>Colour scheme</h2>
       <p class="hint">Six to choose from. High Vis is built for reading in full sun; Pit Night and Cold Start are the easy ones on nights.</p>
       <div class="themes" id="themes"></div>
@@ -460,6 +524,7 @@
         <div class="cell"><div class="lab">Logged for tax</div>
           <div class="val mono" id="kmClaim">—</div><div class="note">At 91c, capped at 5,000 km</div></div>
       </div>
+      <div class="warn" style="border-left-color:var(--bad)">If your block finishes on nights, don't drive straight home. Sleep first, even a few hours. Coming off nights your reactions are down around where they'd be at 0.05, and the drive back is the most dangerous part of the swing.</div>
       <div class="warn">Home-to-site driving is usually private commuting and not deductible. Keep the log anyway and let your accountant decide what's claimable.</div>
     </section>
   </div>
@@ -607,6 +672,15 @@
   }
   document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>showStep(step+1)));
   document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>showStep(step-1)));
+  function sNudge(days){
+    const v=$('sAnchor').value.split('-').map(Number);
+    const d=new Date(v[0],v[1]-1,v[2]+days);
+    $('sAnchor').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    $('anchor').value=$('sAnchor').value; renderAnchorCheck();
+  }
+  $('sNudgeBack').addEventListener('click',()=>sNudge(-1));
+  $('sNudgeFwd').addEventListener('click',()=>sNudge(1));
+  $('sAnchor').addEventListener('input',()=>{$('anchor').value=$('sAnchor').value;renderAnchorCheck()});
   $('sCasual').addEventListener('click',()=>{$('sCasual').setAttribute('aria-pressed','true');$('sPerm').setAttribute('aria-pressed','false')});
   $('sPerm').addEventListener('click',()=>{$('sPerm').setAttribute('aria-pressed','true');$('sCasual').setAttribute('aria-pressed','false')});
   $('sDone').addEventListener('click',()=>{
@@ -979,8 +1053,10 @@
     });
   }
 
-  function renderAll(){drawRing();renderCore();renderPresets();renderChips();renderUpcoming();renderPay();renderSwipes()}
+  function renderAll(){drawRing();renderCore();renderPresets();renderChips();renderUpcoming();renderPay();renderSwipes();renderFatigue();renderAnchorCheck()}
 
+  if($('nudgeBack')) $('nudgeBack').addEventListener('click',()=>shiftAnchor(-1));
+  if($('nudgeFwd'))  $('nudgeFwd').addEventListener('click',()=>shiftAnchor(1));
   $('addDay').addEventListener('click',()=>{pattern.push('O');presetIdx=-1;swipes=null;renderAll()});
   $('delDay').addEventListener('click',()=>{if(pattern.length>2){pattern.pop();presetIdx=-1;swipes=null;renderAll()}});
   $('segCasual').addEventListener('click',()=>setEmployment(true));
@@ -990,6 +1066,83 @@
   $('slip').addEventListener('input',checkSlip);
 
   renderSetupPresets();renderThemes();showStep(0);
+
+
+  /* ================= FATIGUE ================= */
+  function renderFatigue(){
+    const t=today(), i=idxFor(t);
+    const cur=pattern[i], nxt=pattern[(i+1)%pattern.length];
+    // last night of a block: on nights today, and tomorrow is not a shift
+    const lastNight = cur==='N' && (nxt==='O'||nxt==='T');
+    $('fatigue').classList.toggle('hide', !lastNight);
+  }
+
+  /* ================= ANCHOR CHECK & NUDGE ================= */
+  function shiftAnchor(days){
+    const v=$('anchor').value.split('-').map(Number);
+    const d=new Date(v[0],v[1]-1,v[2]+days);
+    $('anchor').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    swipes=null;renderAll();save&&save();
+  }
+  function renderAnchorCheck(){
+    const i=idxFor(today());
+    const el=$('anchorCheck');
+    if(el) el.innerHTML='That puts today on <b>'+NAME[pattern[i]].toLowerCase()+
+      '</b> &mdash; day '+(i+1)+' of '+pattern.length+'.';
+    const el2=$('sAnchorCheck');
+    if(el2) el2.innerHTML='That puts today on <b>'+NAME[pattern[i]].toLowerCase()+'</b>.';
+  }
+
+  /* ================= SHARE ================= */
+  function rosterText(){
+    const t=today();let runs=[],run=null;
+    for(let k=0;k<42;k++){
+      const d=new Date(t.getTime()+k*dayMs),ty=pattern[idxFor(d)];
+      if(run&&run.type===ty){run.end=d;continue}
+      if(run)runs.push(run);run={type:ty,start:d,end:d};
+    }
+    if(run)runs.push(run);
+    const line=r=>{
+      const a=r.start.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+      const b=r.end.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+      const when=(+r.start===+r.end)?a:a+' to '+b;
+      const what={D:'Day shift',N:'Night shift',T:'Travelling',O:'HOME'}[r.type];
+      return when+' — '+what;
+    };
+    return 'My roster, next six weeks\n\n'+runs.map(line).join('\n')+
+      '\n\nFrom The Ultimate Shift Engine';
+  }
+  function shareUrl(){
+    const payload={p:pattern.join(''),a:$('anchor').value};
+    return location.href.split('#')[0]+'#r='+btoa(JSON.stringify(payload));
+  }
+  function flash(msg){ $('shareMsg').textContent=msg; setTimeout(()=>$('shareMsg').textContent='',2600); }
+  if($('shareLink')) $('shareLink').addEventListener('click',async()=>{
+    const url=shareUrl();
+    try{
+      if(navigator.share){ await navigator.share({title:'My roster',text:'My roster — dates on and dates home.',url}); return; }
+      await navigator.clipboard.writeText(url); flash('Link copied. Paste it to whoever needs it.');
+    }catch(e){ flash('Couldn\u2019t share here — try Copy as a message instead.'); }
+  });
+  if($('shareText')) $('shareText').addEventListener('click',async()=>{
+    try{ await navigator.clipboard.writeText(rosterText()); flash('Copied. Paste it into a message.'); }
+    catch(e){ flash('Couldn\u2019t copy here.'); }
+  });
+
+  /* ================= VIEW MODE ================= */
+  function tryViewMode(){
+    if(!location.hash.startsWith('#r=')) return false;
+    let d; try{ d=JSON.parse(atob(location.hash.slice(3))); }catch(e){ return false; }
+    if(!d||!d.p) return false;
+    pattern=d.p.split(''); presetIdx=-1;
+    if(d.a) $('anchor').value=d.a;
+    document.body.classList.add('viewmode');
+    $('setup').classList.add('hide');
+    $('viewBanner').style.display='block';
+    $('viewBanner').innerHTML='<b>Shared roster.</b> This stays right on its own as the cycle rolls over &mdash; no need to ask again.';
+    renderAll();
+    return true;
+  }
 
   /* ================= SAVING ================= */
   const KEY='ultimate-shift-engine.v1';
@@ -1033,8 +1186,11 @@
   });
 
   /* ================= BOOT ================= */
-  const restored = load();
-  if(restored){
+  const viewing = tryViewMode();
+  const restored = viewing ? true : load();
+  if(viewing){
+    ready=true;
+  }else if(restored){
     $('setup').classList.add('hide');
     renderAll();
     $('saveState').textContent='Saved on this device.';
