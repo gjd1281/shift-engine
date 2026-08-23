@@ -265,6 +265,32 @@
     border-radius:4px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.5}
   body.viewmode nav,body.viewmode #shareSec,body.viewmode #patternSec,
   body.viewmode #themeSec,body.viewmode #editBtn{display:none!important}
+
+  /* ---- centre photo ---- */
+  .core .photoWrap{width:96px;height:96px;border-radius:50%;overflow:hidden;
+    border:2px solid var(--line);margin-bottom:8px;background:var(--surface-2);
+    display:flex;align-items:center;justify-content:center}
+  .core .photoWrap img{width:100%;height:100%;object-fit:cover;display:block}
+  .core.hasPhoto .big{font-size:24px;margin:2px 0 0}
+  .core.hasPhoto .kicker{display:none}
+  #photoRow{display:flex;gap:8px;margin-top:12px}
+  #photoRow label,#photoRow button{flex:1;background:transparent;border:1px solid var(--line);
+    color:var(--muted);border-radius:4px;padding:10px;font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;text-align:center}
+  #photoRow label:hover,#photoRow button:hover{color:var(--text);border-color:var(--muted)}
+
+  /* ---- awake meter ---- */
+  .awake{border:1px solid var(--line);border-radius:4px;padding:16px 15px;
+    background:linear-gradient(150deg,var(--surface-2),var(--surface));margin-top:4px}
+  .awake .big2{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:40px;line-height:1}
+  .awake .u2{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);margin-top:6px}
+  .awake .verdict2{font-size:14px;line-height:1.55;margin-top:13px}
+  .awake .verdict2 b{font-variation-settings:'wght' 700}
+  .meter{height:8px;background:var(--off);border-radius:4px;margin:15px 0 6px;overflow:hidden}
+  .meter i{display:block;height:100%;border-radius:4px}
+  .scale{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;color:var(--muted);letter-spacing:.06em}
   footer{border-top:1px solid var(--line);padding-top:16px;margin-top:8px;font-size:12px;color:var(--muted)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -372,7 +398,8 @@
     </div>
     <div class="ringbox">
       <svg class="ring" viewBox="0 0 300 300" id="ring"></svg>
-      <div class="core">
+      <div class="core" id="core">
+        <div class="photoWrap" id="photoWrap" style="display:none"><img id="corePhoto" alt=""></div>
         <div class="kicker" id="coreKicker">Today</div>
         <div class="big" id="coreBig">—</div>
         <div class="sub" id="coreSub"></div>
@@ -382,6 +409,11 @@
       <div><i class="dot D"></i>Day</div><div><i class="dot N"></i>Night</div>
       <div><i class="dot T"></i>Travel</div><div><i class="dot O"></i>Home</div>
     </div>
+    <div id="photoRow">
+      <label for="photoIn">Add your why</label>
+      <button id="photoClear" style="display:none">Remove photo</button>
+    </div>
+    <input type="file" id="photoIn" accept="image/*" style="display:none">
     <div class="strip">
       <div class="cell"><div class="lab">Next change</div><div class="val" id="nextVal">—</div><div class="note" id="nextNote"></div></div>
       <div class="cell"><div class="lab">Cycle position</div><div class="val" id="posVal">—</div><div class="note" id="posNote"></div></div>
@@ -460,11 +492,21 @@
         <div class="amt" id="cycleAmt">—</div>
         <div class="note" id="cycleNote" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
       </div>
+      <div class="field" style="margin-top:4px"><label for="annualIn">Or enter a package instead</label>
+        <div><span class="unit">$</span><input type="number" id="annualIn" value="0" step="1000" placeholder="0"></div></div>
+      <p class="hint" id="annualNote" style="margin-top:6px"></p>
       <div class="paygrid">
         <div class="cell"><div class="lab">Annualised</div>
           <div class="val mono" id="annAmt">—</div><div class="note" id="annNote"></div></div>
         <div class="cell"><div class="lab">Super a year</div>
           <div class="val mono" id="supAmt">—</div><div class="note">On top of the rate</div></div>
+      </div>
+
+      <div class="paygrid" style="margin-top:10px">
+        <div class="cell"><div class="lab">Hours on site a year</div>
+          <div class="val mono" id="siteHrs">—</div><div class="note" id="siteHrsNote"></div></div>
+        <div class="cell"><div class="lab">Nights on site</div>
+          <div class="val mono" id="siteNights">—</div><div class="note">Per year, away from home</div></div>
       </div>
     </section>
 
@@ -508,6 +550,26 @@
         <div class="body" id="vBody"></div>
       </div>
       <div class="warn">Payslips arrive by email. A later version reads them out of your inbox and runs this check without you typing anything.</div>
+    </section>
+
+    <section>
+      <h2>How long have you been awake?</h2>
+      <p class="hint">Before you drive home off nights. Set when you woke up and it does the rest.</p>
+      <div class="field"><label for="wokeTime">I woke up at</label>
+        <div><input type="time" id="wokeTime" value="17:00"></div></div>
+      <div class="field"><label for="wokeDay">That was</label>
+        <select id="wokeDay">
+          <option value="0">Today</option>
+          <option value="1" selected>Yesterday</option>
+        </select></div>
+      <div class="awake" style="margin-top:16px">
+        <div class="big2" id="awakeHrs">—</div>
+        <div class="u2">hours awake</div>
+        <div class="meter"><i id="awakeBar" style="width:0%"></i></div>
+        <div class="scale"><span>0</span><span>17 hrs ≈ 0.05</span><span>24 hrs ≈ 0.10</span></div>
+        <div class="verdict2" id="awakeVerdict"></div>
+      </div>
+      <div class="warn">The blood alcohol comparison comes from sleep research on reaction times and it isn’t a legal measure — you can be dangerously impaired by fatigue and still be under 0.05 on a breath test. Nobody has ever been booked for it. Plenty have been killed by it.</div>
     </section>
 
     <section>
@@ -1053,7 +1115,7 @@
     });
   }
 
-  function renderAll(){drawRing();renderCore();renderPresets();renderChips();renderUpcoming();renderPay();renderSwipes();renderFatigue();renderAnchorCheck()}
+  function renderAll(){drawRing();renderCore();renderPresets();renderChips();renderUpcoming();renderPay();renderSwipes();renderFatigue();renderAnchorCheck();renderPhoto();renderAwake();renderSite();renderPackage()}
 
   if($('nudgeBack')) $('nudgeBack').addEventListener('click',()=>shiftAnchor(-1));
   if($('nudgeFwd'))  $('nudgeFwd').addEventListener('click',()=>shiftAnchor(1));
@@ -1064,6 +1126,9 @@
   ['anchor','rate','hours','superRate','alWeeks','km','startDate'].forEach(id=>
     $(id).addEventListener('input',()=>{swipes=null;renderAll()}));
   $('slip').addEventListener('input',checkSlip);
+  ['wokeTime','wokeDay'].forEach(id=>$(id).addEventListener('input',()=>{renderAwake();save&&save()}));
+  $('annualIn').addEventListener('input',()=>{renderPackage();save&&save()});
+  setInterval(renderAwake, 60000);
 
   renderSetupPresets();renderThemes();showStep(0);
 
@@ -1144,6 +1209,91 @@
     return true;
   }
 
+
+  /* ================= CENTRE PHOTO ================= */
+  let photoData=null;
+  function renderPhoto(){
+    const w=$('photoWrap'), img=$('corePhoto'), core=$('core');
+    if(photoData){ img.src=photoData; w.style.display='flex'; core.classList.add('hasPhoto');
+      $('photoClear').style.display='block'; }
+    else { w.style.display='none'; core.classList.remove('hasPhoto');
+      $('photoClear').style.display='none'; }
+  }
+  $('photoIn').addEventListener('change',e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      // downscale so it fits comfortably in storage
+      const im=new Image();
+      im.onload=()=>{
+        const S=220, c=document.createElement('canvas'); c.width=c.height=S;
+        const ctx=c.getContext('2d');
+        const side=Math.min(im.width,im.height);
+        ctx.drawImage(im,(im.width-side)/2,(im.height-side)/2,side,side,0,0,S,S);
+        photoData=c.toDataURL('image/jpeg',0.72);
+        renderPhoto(); save&&save();
+      };
+      im.src=r.result;
+    };
+    r.readAsDataURL(f); e.target.value='';
+  });
+  $('photoClear').addEventListener('click',()=>{photoData=null;renderPhoto();save&&save();});
+
+  /* ================= TIME AWAKE ================= */
+  function renderAwake(){
+    const t=$('wokeTime').value.split(':').map(Number);
+    const back=+$('wokeDay').value;
+    const now=new Date();
+    const woke=new Date(now.getFullYear(),now.getMonth(),now.getDate()-back,t[0],t[1]);
+    let hrs=(now-woke)/3600000;
+    if(hrs<0) hrs+=24;
+    $('awakeHrs').textContent=hrs.toFixed(1);
+    const pct=Math.max(0,Math.min(100,hrs/28*100));
+    const bar=$('awakeBar');
+    bar.style.width=pct.toFixed(1)+'%';
+    let col,txt;
+    if(hrs<13){ col='var(--good)';
+      txt='<b>You\u2019re alright.</b> Normal waking hours. Still worth a break every couple of hours on a long drive.'; }
+    else if(hrs<17){ col='var(--day)';
+      txt='<b>Getting there.</b> You\u2019re past a normal day. Reactions are starting to slide even though you won\u2019t feel it much yet.'; }
+    else if(hrs<21){ col='#FF8C42';
+      txt='<b>About the same as 0.05.</b> That\u2019s over the limit for a provisional driver. If you\u2019re about to drive home, sleep first \u2014 even a few hours.'; }
+    else if(hrs<25){ col='var(--bad)';
+      txt='<b>Around 0.08 to 0.10.</b> This is where microsleeps start, and you don\u2019t get a warning before one. Do not drive. Get a bed, or get a lift.'; }
+    else { col='var(--bad)';
+      txt='<b>Well past 0.10 equivalent.</b> You are not fit to drive and probably not fit to judge whether you are. Sleep now.'; }
+    bar.style.background=col;
+    $('awakeVerdict').innerHTML=txt;
+  }
+
+  /* ================= SITE HOURS + PACKAGE ================= */
+  function renderSite(){
+    const hrs=+$('hours').value||0;
+    const shifts=pattern.filter(t=>t==='D'||t==='N').length;
+    const nights=pattern.filter(t=>t==='N').length;
+    const cyclesYr=365.25/pattern.length;
+    const yrHours=shifts*hrs*cyclesYr;
+    const yrNights=Math.round((nights+pattern.filter(t=>t==='T').length)*cyclesYr);
+    $('siteHrs').textContent=Math.round(yrHours).toLocaleString('en-AU');
+    $('siteHrsNote').textContent=Math.round(shifts*hrs)+' hrs a cycle · '+Math.round(shifts*cyclesYr)+' shifts';
+    $('siteNights').textContent=yrNights.toLocaleString('en-AU');
+  }
+  function renderPackage(){
+    const pkg=+$('annualIn').value||0;
+    const hrs=+$('hours').value||0;
+    const shifts=pattern.filter(t=>t==='D'||t==='N').length;
+    const cyclesYr=365.25/pattern.length;
+    const yrHours=shifts*hrs*cyclesYr;
+    if(pkg>0 && yrHours>0){
+      const eff=pkg/yrHours;
+      $('annualNote').innerHTML='On a package of '+money(pkg)+' across '+Math.round(yrHours).toLocaleString('en-AU')+
+        ' hours, you\u2019re effectively on <b style="color:var(--text)">'+money2(eff)+' an hour</b>. '+
+        (eff < (+$('rate').value||0) ? 'That\u2019s below your hourly rate.' : 'That\u2019s above your hourly rate.');
+    } else {
+      $('annualNote').textContent='Salaried instead of hourly? Put the package in and it works out what you\u2019re really earning an hour on this roster.';
+    }
+  }
+
   /* ================= SAVING ================= */
   const KEY='ultimate-shift-engine.v1';
   let ready=false;
@@ -1154,7 +1304,8 @@
       rate:$('rate').value, hours:$('hours').value, superRate:$('superRate').value,
       alWeeks:$('alWeeks').value, km:$('km').value,
       depTime:$('depTime').value, campTime:$('campTime').value,
-      machines:myMachines, tickets
+      machines:myMachines, tickets, photoData,
+      wokeTime:$('wokeTime').value, wokeDay:$('wokeDay').value, annualIn:$('annualIn').value
     };
   }
   function save(){
@@ -1172,8 +1323,9 @@
     if(typeof d.presetIdx==='number') presetIdx=d.presetIdx;
     if(d.machines) myMachines=d.machines;
     if(Array.isArray(d.tickets)&&d.tickets.length) tickets=d.tickets;
-    ['anchor','startDate','rate','hours','superRate','alWeeks','km','depTime','campTime']
+    ['anchor','startDate','rate','hours','superRate','alWeeks','km','depTime','campTime','wokeTime','wokeDay','annualIn']
       .forEach(k=>{ if(d[k]!==undefined&&$(k)) $(k).value=d[k]; });
+    if(d.photoData) photoData=d.photoData;
     if(typeof d.themeIdx==='number') applyTheme(d.themeIdx);
     setEmployment(d.casual!==false);
     setSkillMode(d.multi!==false);
