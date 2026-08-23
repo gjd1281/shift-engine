@@ -291,6 +291,23 @@
   .meter i{display:block;height:100%;border-radius:4px}
   .scale{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;
     font-size:9.5px;color:var(--muted);letter-spacing:.06em}
+
+  /* ---- attachments ---- */
+  .tick{flex-wrap:wrap}
+  .tickActions{display:flex;gap:6px;width:100%;margin-top:8px}
+  .tickActions button,.tickActions label{flex:1;background:transparent;border:1px solid var(--line);
+    color:var(--muted);border-radius:4px;padding:7px 6px;font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;text-align:center}
+  .tickActions button:hover,.tickActions label:hover{color:var(--text);border-color:var(--muted)}
+  .tickActions .has{border-color:var(--good);color:var(--good)}
+  .attached{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--good);
+    width:100%;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .packBox{background:linear-gradient(150deg,var(--surface-2),var(--surface));border:1px solid var(--line);
+    border-left:3px solid var(--night);border-radius:4px;padding:16px 15px}
+  .packList{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);
+    line-height:1.8;margin:0 0 13px}
+  .packList b{color:var(--text)}
+  .quota{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-top:10px}
   footer{border-top:1px solid var(--line);padding-top:16px;margin-top:8px;font-size:12px;color:var(--muted)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -319,7 +336,7 @@
       <div class="sKick">Step 2 of 5</div>
       <h1 class="sHead">When did day one land?</h1>
       <p class="sBody">The first shift after your longest break. This is the one thing the whole app hangs off — a 28-day cycle or a 7/7 day-and-night rotation only lines up if this date is right.</p>
-      <input type="date" id="sAnchor" class="bigDate" value="2026-08-17">
+      <input type="date" id="sAnchor" class="bigDate">
       <div class="checkline" id="sAnchorCheck"></div>
       <div class="nudge">
         <button id="sNudgeBack">&#9664; A day earlier</button>
@@ -338,7 +355,7 @@
         <button id="sPerm" aria-pressed="false">Permanent</button>
       </div>
       <div class="field" style="margin-top:18px"><label for="sStart">Started this job</label>
-        <input type="date" id="sStart" value="2026-08-17"></div>
+        <input type="date" id="sStart"></div>
       <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
     </div>
 
@@ -347,11 +364,11 @@
       <h1 class="sHead">What do they pay you?</h1>
       <p class="sBody">Off your last payslip. This is what the forecast and the payslip check run on.</p>
       <div class="field"><label for="sRate">Hourly rate</label>
-        <div><span class="unit">$</span><input type="number" id="sRate" value="85.14" step="0.01"></div></div>
+        <div><span class="unit">$</span><input type="number" id="sRate" value="" step="0.01" placeholder="0.00"></div></div>
       <div class="field"><label for="sHours">Paid hours per shift</label>
         <div><span class="unit">hrs</span><input type="number" id="sHours" value="12.5" step="0.25"></div></div>
       <div class="field"><label for="sKm">Round trip to site</label>
-        <div><span class="unit">km</span><input type="number" id="sKm" value="260" step="10"></div></div>
+        <div><span class="unit">km</span><input type="number" id="sKm" value="" step="10" placeholder="0"></div></div>
       <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
     </div>
 
@@ -430,7 +447,7 @@
       </div>
       <div class="field" style="margin-top:14px">
         <label for="anchor">Day 1 fell on</label>
-        <input type="date" id="anchor" value="2026-08-17">
+        <input type="date" id="anchor">
       </div>
       <div class="checkline" id="anchorCheck"></div>
       <div class="nudge">
@@ -479,7 +496,7 @@
       </div>
       <p class="hint" id="empHint"></p>
       <div class="field"><label for="rate">Hourly rate</label>
-        <div><span class="unit">$</span><input type="number" id="rate" value="85.14" step="0.01"></div></div>
+        <div><span class="unit">$</span><input type="number" id="rate" value="" step="0.01" placeholder="0.00"></div></div>
       <div class="field"><label for="hours">Paid hours per shift</label>
         <div><span class="unit">hrs</span><input type="number" id="hours" value="12.5" step="0.25"></div></div>
       <div class="field"><label for="superRate">Super</label>
@@ -524,7 +541,7 @@
     <section id="countSection">
       <h2>Going permanent</h2>
       <div class="field"><label for="startDate">Started casual</label>
-        <input type="date" id="startDate" value="2026-08-17"></div>
+        <input type="date" id="startDate"></div>
       <div class="count" style="margin-top:16px">
         <div class="n" id="cdNum">—</div>
         <div class="u" id="cdUnit">days until you can ask</div>
@@ -575,7 +592,7 @@
     <section>
       <h2>Travel &amp; camp</h2>
       <div class="field"><label for="km">Round trip, home to site</label>
-        <div><span class="unit">km</span><input type="number" id="km" value="260" step="10"></div></div>
+        <div><span class="unit">km</span><input type="number" id="km" value="" step="10" placeholder="0"></div></div>
       <div class="field"><label for="depTime">Leave home</label>
         <div><input type="time" id="depTime" value="17:00"></div></div>
       <div class="field"><label for="campTime">Camp check-in</label>
@@ -613,6 +630,30 @@
       <p class="hint">Set your own dates. Anything inside 60 days goes amber, anything past goes red — so a lapsed medical never costs you a swing.</p>
       <div id="ticketList"></div>
       <div class="rowbtns"><button class="ghost" id="addTicket">Add a ticket</button></div>
+    </section>
+
+    <section>
+      <h2>Your resume</h2>
+      <p class="hint">Keep the current one here so it's on you when a job comes up, not sitting on a laptop at home.</p>
+      <div id="resumeBox"></div>
+      <div class="rowbtns" style="margin-top:10px">
+        <label class="ghost" for="resumeIn" style="line-height:1.6">Upload resume</label>
+        <button class="ghost" id="resumeClear" style="display:none">Remove</button>
+      </div>
+      <input type="file" id="resumeIn" accept=".pdf,.doc,.docx,image/*" style="display:none">
+    </section>
+
+    <section>
+      <h2>Send your job pack</h2>
+      <p class="hint">Everything a contractor asks for, in one go — your tickets, your medical, your resume and your profile. One button instead of an hour of digging.</p>
+      <div class="packBox">
+        <div class="packList" id="packList"></div>
+        <div class="rowbtns" style="margin-top:0">
+          <button class="ghost" id="sendPack">Send the lot</button>
+        </div>
+        <p class="hint" id="packMsg" style="margin-bottom:0"></p>
+        <div class="quota" id="quotaLine"></div>
+      </div>
     </section>
 
     <section>
@@ -975,13 +1016,13 @@
   /* ================= SKILLS ================= */
   const MACHINES=['Haul truck','Excavator','Dozer','Grader','Loader','Water cart',
                   'Drill','Scraper','Service truck','Light vehicle','Dragline','Float'];
-  let myMachines={'Haul truck':4200,'Excavator':1800,'Dozer':950,'Water cart':600};
+  let myMachines={};
   let multi=true;
   let tickets=[
-    {n:'Standard 11 (coal induction)', d:'2028-03-14'},
-    {n:'Coal board medical',           d:'2026-10-02'},
-    {n:'HR licence',                   d:'2029-06-30'},
-    {n:'First aid & CPR',              d:'2026-08-09'}
+    {n:'Site induction',     d:''},
+    {n:'Medical',            d:''},
+    {n:'Licence',            d:''},
+    {n:'First aid & CPR',    d:''}
   ];
   let docFilterMachine=null;
 
@@ -1293,6 +1334,13 @@
       $('annualNote').textContent='Salaried instead of hourly? Put the package in and it works out what you\u2019re really earning an hour on this roster.';
     }
   }
+
+  /* ---- blank dates default to today ---- */
+  (function seedDates(){
+    const d=new Date();
+    const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    ['anchor','startDate','sAnchor','sStart'].forEach(id=>{ if($(id)&&!$(id).value) $(id).value=iso; });
+  })();
 
   /* ================= SAVING ================= */
   const KEY='ultimate-shift-engine.v1';
