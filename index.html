@@ -1,4 +1,10 @@
-<!-- ===== PERSONAL PHOTO IN THE WHEEL — paste before </body> ===== -->
+<!-- ===== PERSONAL PHOTO IN THE WHEEL + BUILD STAMP — paste before </body> ===== -->
+<!--
+  ONE THING TO CHANGE: the BUILD line below (search for "v1").
+  Bump it every time you push. Open the site in a private tab —
+  if the stamp bottom-right shows the new number, your change is live.
+  If it shows the old number, you're looking at a cached copy.
+-->
 <style>
   .se-hubwrap{position:relative}
   .se-hubwrap > svg, .se-hubwrap > canvas{position:relative;z-index:2}
@@ -15,9 +21,25 @@
   .se-photobtns button{background:#211a33;border:1px solid #332a4a;border-radius:999px;padding:9px 16px;
     color:#9C93B8;font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.1em;
     text-transform:uppercase;cursor:pointer}
+
+  /* build stamp — same palette as the wheel hub */
+  .se-build{position:fixed;bottom:6px;right:8px;z-index:9999;pointer-events:none;
+    background:#1d1730;border:1px solid rgba(255,176,32,.45);border-radius:999px;
+    padding:4px 10px;font-family:ui-monospace,Menlo,monospace;font-size:10px;
+    letter-spacing:.14em;color:#FFB020;text-transform:uppercase}
 </style>
+
+<div class="se-build" id="seBuild">v1</div>
+
 <script>
 (function(){
+  /* ---------- BUILD STAMP ---------- */
+  var BUILD = "v1";                     /* <-- bump this every push: v2, v3, v4 ... */
+  var el = document.getElementById("seBuild");
+  if(el) el.textContent = BUILD;
+  console.log("SHIFT ENGINE BUILD:", BUILD);
+
+  /* ---------- PERSONAL PHOTO IN THE WHEEL ---------- */
   /* --- if it grabs the wrong element, put your wheel's id here e.g. '#rosterWheel' --- */
   var WHEEL   = document.querySelector('#wheel, #rosterWheel, .wheel, #tab-roster svg, section svg, svg');
   var HUB_PCT = 0.56;   /* photo width as a share of the wheel — nudge to taste */
@@ -99,4 +121,4 @@
   paint(saved);
 })();
 </script>
-<!-- ===== END PERSONAL PHOTO ===== -->
+<!-- ===== END PERSONAL PHOTO + BUILD STAMP ===== -->
