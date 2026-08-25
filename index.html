@@ -20,6 +20,8 @@
     --night:#4CC9F0; --night2:#4361EE;
     --off:#2F5A4B; --home:#3DD9A0; --travel:#F7529A;
     --pj:#B15CF5;
+    --on-day:#1A1005; --on-night:#FFFFFF; --on-home:#08130E;
+    --on-travel:#FFFFFF; --on-bad:#FFFFFF; --on-pj:#FFFFFF;
     --bad:#FF5F6D; --good:#3DD9A0;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -120,10 +122,28 @@
   .chip.today{outline:2px solid var(--text);outline-offset:1px}
 
   .rowbtns{display:flex;gap:8px;margin-top:12px}
-  button.ghost{flex:1;background:transparent;border:1px solid var(--line);color:var(--muted);
-    border-radius:4px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;
-    letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
-  button.ghost:hover{border-color:var(--muted);color:var(--text)}
+  button.ghost,label.ghost{
+    --acc:var(--night); --on:var(--on-night);
+    flex:1;position:relative;overflow:hidden;
+    background:linear-gradient(148deg,
+      color-mix(in srgb,var(--acc) 88%,#fff) 0%,
+      var(--acc) 46%,
+      color-mix(in srgb,var(--acc) 64%,#000) 100%);
+    border:none;color:var(--on);
+    border-radius:6px;padding:14px 10px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+    letter-spacing:.12em;text-transform:uppercase;font-weight:700;cursor:pointer;
+    box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 4px 14px rgba(0,0,0,.3);
+    transition:transform .07s,filter .15s}
+  button.ghost::before,label.ghost::before{content:"";position:absolute;inset:0 0 auto;height:46%;
+    pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.26),transparent)}
+  button.ghost:hover,label.ghost:hover{filter:brightness(1.1)}
+  button.ghost:active,label.ghost:active{transform:scale(.972);filter:brightness(.94)}
+  .ghost.aDay{--acc:var(--day);--on:var(--on-day)}
+  .ghost.aNight{--acc:var(--night);--on:var(--on-night)}
+  .ghost.aHome{--acc:var(--home);--on:var(--on-home)}
+  .ghost.aTravel{--acc:var(--travel);--on:var(--on-travel)}
+  .ghost.aPj{--acc:var(--pj);--on:var(--on-pj)}
+  .ghost.aBad{--acc:var(--bad);--on:var(--on-bad)}
   button.solid{background:linear-gradient(96deg,var(--day),var(--day2));border:none;color:var(--ink);
     border-radius:4px;padding:14px;width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px;
     letter-spacing:.12em;text-transform:uppercase;font-weight:600;cursor:pointer}
@@ -275,9 +295,15 @@
 
   /* ---- anchor nudge ---- */
   .nudge{display:flex;gap:8px;margin-top:10px}
-  .nudge button{flex:1;background:transparent;border:1px solid var(--line);color:var(--muted);
-    border-radius:4px;padding:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer}
-  .nudge button:hover{color:var(--text);border-color:var(--muted)}
+  .nudge button{flex:1;
+    background:linear-gradient(148deg,color-mix(in srgb,var(--night) 88%,#fff),
+      var(--night) 46%,color-mix(in srgb,var(--night) 64%,#000));
+    border:none;color:var(--on-night);
+    border-radius:6px;padding:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    font-weight:700;cursor:pointer;transition:transform .07s,filter .15s;
+    box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 4px 12px rgba(0,0,0,.28)}
+  .nudge button:hover{filter:brightness(1.1)}
+  .nudge button:active{transform:scale(.972);filter:brightness(.94)}
   .checkline{font-size:13px;color:var(--muted);margin-top:11px;line-height:1.5}
   .checkline b{color:var(--text);font-variation-settings:'wght' 700}
 
@@ -286,8 +312,7 @@
     border:1px solid var(--line);border-left:3px solid var(--night);border-radius:4px;padding:16px 15px}
   .viewBanner{background:color-mix(in srgb,var(--night) 18%,transparent);border:1px solid var(--night);
     border-radius:4px;padding:12px 14px;margin-bottom:18px;font-size:13px;line-height:1.5}
-  body.viewmode nav,body.viewmode #shareSec,body.viewmode #patternSec,
-  body.viewmode #themeSec,body.viewmode #editBtn{display:none!important}
+  /* view mode shows a banner only — it never hides anything, so nobody gets stuck */
 
   /* ---- centre photo ---- */
   .core .photoWrap{width:92px;height:92px;border-radius:50%;overflow:hidden;
@@ -297,10 +322,20 @@
   .core.hasPhoto .big{font-size:22px;margin:2px 0 0}
   .core.hasPhoto .kicker{display:none}
   #photoRow{display:flex;gap:8px;margin-top:12px}
-  #photoRow label,#photoRow button{flex:1;background:transparent;border:1px solid var(--line);
-    color:var(--muted);border-radius:4px;padding:10px;font-family:'IBM Plex Mono',monospace;
-    font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;text-align:center}
-  #photoRow label:hover,#photoRow button:hover{color:var(--text);border-color:var(--muted)}
+  #photoRow label,#photoRow button{--acc:var(--home);--on:var(--on-home);flex:1;position:relative;
+    overflow:hidden;
+    background:linear-gradient(148deg,color-mix(in srgb,var(--acc) 88%,#fff),
+      var(--acc) 46%,color-mix(in srgb,var(--acc) 64%,#000));
+    border:none;color:var(--on);
+    border-radius:6px;padding:14px 10px;font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+    cursor:pointer;text-align:center;transition:transform .07s,filter .15s;
+    box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 4px 14px rgba(0,0,0,.3)}
+  #photoRow button{--acc:var(--bad);--on:var(--on-bad)}
+  #photoRow label::before,#photoRow button::before{content:"";position:absolute;inset:0 0 auto;
+    height:46%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.26),transparent)}
+  #photoRow label:hover,#photoRow button:hover{filter:brightness(1.1)}
+  #photoRow label:active,#photoRow button:active{transform:scale(.972)}
 
   /* ---- awake meter ---- */
   .awake{border:1px solid var(--line);border-radius:4px;padding:16px 15px;
@@ -403,8 +438,8 @@
       <input type="date" id="sAnchor" class="bigDate">
       <div class="checkline" id="sAnchorCheck"></div>
       <div class="nudge">
-        <button id="sNudgeBack">&#9664; A day earlier</button>
-        <button id="sNudgeFwd">A day later &#9654;</button>
+        <button id="sNudgeBack">&#9664; Back a day</button>
+        <button id="sNudgeFwd">Forward a day &#9654;</button>
       </div>
       <p class="hint">Not sure? Set it roughly, then nudge until the line above matches what you're actually doing today.</p>
       <div class="sFoot"><button class="sBack" data-back>Back</button><button class="solid" data-next>Next</button></div>
@@ -450,7 +485,7 @@
 <!-- ================= INSTALL SHEET ================= -->
 <div id="installSheet" class="hide">
   <div class="iBox">
-    <h3>Save to phone</h3>
+    <h3>Save as app</h3>
     <div id="iBody"></div>
     <button class="solid" id="iClose">Got it</button>
   </div>
@@ -487,6 +522,7 @@
         <li>Share the driving, or wear the extra night and leave in daylight.</li>
         <li>Pulling over for a sleep is never the wrong call.</li>
       </ul>
+      <div id="fatCalc" style="margin-top:13px;padding-top:13px;border-top:1px solid var(--line);font-size:13.5px;line-height:1.55"></div>
     </div>
     <div class="ringbox">
       <svg class="ring" viewBox="0 0 300 300" id="ring"></svg>
@@ -511,6 +547,20 @@
       <div class="cell"><div class="lab">Next change</div><div class="val" id="nextVal">—</div><div class="note" id="nextNote"></div></div>
       <div class="cell"><div class="lab">Cycle position</div><div class="val" id="posVal">—</div><div class="note" id="posNote"></div></div>
     </div>
+    <section id="shareSec" style="margin-top:-8px">
+      <h2>Share &amp; save</h2>
+      <div class="shareBox">
+        <div class="rowbtns" style="margin-top:0">
+          <button class="ghost aNight" id="shareLink">Send to crew</button>
+          <button class="ghost aDay" id="saveToPhone">Save as app instructions</button>
+        </div>
+        <div class="rowbtns">
+          <button class="ghost aTravel" id="shareText">Copy as a message</button>
+        </div>
+        <p class="hint" id="shareMsg" style="margin-bottom:0"></p>
+      </div>
+      <p class="hint">Sends the roster only — dates on and dates home. No pay, no tickets, no hours, no photo. Whoever opens it taps <b>Make this roster mine</b> and they're straight into the full app with the roster already in it.</p>
+    </section>
 
     <section id="patternSec">
       <h2>Your roster</h2>
@@ -518,8 +568,8 @@
       <p class="hint">Tap any day to change it — day, night, PJ, home, travel. PJ is a rostered day off inside a block. Travel days sit inside your break: still your time, just spent driving.</p>
       <div class="chips" id="chips"></div>
       <div class="rowbtns">
-        <button class="ghost" id="addDay">Add day</button>
-        <button class="ghost" id="delDay">Remove day</button>
+        <button class="ghost aHome" id="addDay">Add day</button>
+        <button class="ghost aBad" id="delDay">Remove day</button>
       </div>
       <div class="field" style="margin-top:14px">
         <label for="anchor">Day 1 fell on</label>
@@ -534,25 +584,8 @@
     </section>
 
     <section>
-      <h2>Next six weeks</h2>
+      <h2>Next four weeks</h2>
       <ol class="up" id="upcoming"></ol>
-    </section>
-
-    <section id="shareSec">
-      <h2>Share your roster</h2>
-      <p class="hint">Sends the roster only — dates on and dates home. No pay, no tickets, no hours, no photo. Whoever opens it gets a read-only copy that stays right as the cycle rolls over.</p>
-      <div class="shareBox">
-        <div class="rowbtns" style="margin-top:0">
-          <button class="ghost" id="shareLink">Send a link</button>
-        </div>
-        <div class="rowbtns">
-          <button class="ghost" id="shareText">Copy as a message</button>
-        </div>
-        <div class="rowbtns">
-          <button class="ghost" id="saveToPhone">Save to phone</button>
-        </div>
-        <p class="hint" id="shareMsg" style="margin-bottom:0"></p>
-      </div>
     </section>
 
     <section id="themeSec">
@@ -563,7 +596,7 @@
       <p class="hint" style="margin-top:6px">Your side's colours on the backdrop and the wheel hub.</p>
       <div class="themes team" id="teamThemes"></div>
       <div class="rowbtns" style="margin-top:18px">
-        <button class="ghost" id="resetAll">Start over</button>
+        <button class="ghost aBad" id="resetAll">Start over</button>
       </div>
       <p class="hint" id="saveState"></p>
     </section>
@@ -679,6 +712,11 @@
         <div><input type="time" id="depTime" value="17:00"></div></div>
       <div class="field"><label for="campTime">Camp check-in</label>
         <div><input type="time" id="campTime" value="20:00"></div></div>
+      <div class="field"><label for="fatLimit">Fatigue limit — shift + travel</label>
+        <div><span class="unit">hrs</span><input type="number" id="fatLimit" value="14" step="0.5"></div></div>
+      <div class="field"><label for="restMin">Rest needed before driving</label>
+        <div><span class="unit">hrs</span><input type="number" id="restMin" value="4" step="0.5"></div></div>
+      <p class="hint">Set these to your site's fatigue management policy. When the last night of a block plus the drive home goes over the limit, the roster screen tells you to sleep before you go.</p>
       <div class="paygrid" style="margin-top:16px">
         <div class="cell"><div class="lab">Km a year</div>
           <div class="val mono" id="kmYear">—</div><div class="note" id="kmNote"></div></div>
@@ -711,7 +749,7 @@
       <h2>Tickets &amp; medicals</h2>
       <p class="hint">Set your own dates. Anything inside 60 days goes amber, anything past goes red — so a lapsed medical never costs you a swing.</p>
       <div id="ticketList"></div>
-      <div class="rowbtns"><button class="ghost" id="addTicket">Add a ticket</button></div>
+      <div class="rowbtns"><button class="ghost aDay" id="addTicket">Add a ticket</button></div>
     </section>
 
     <section>
@@ -719,8 +757,8 @@
       <p class="hint">Keep the current one here so it's on you when a job comes up, not sitting on a laptop at home.</p>
       <div id="resumeBox"></div>
       <div class="rowbtns" style="margin-top:10px">
-        <label class="ghost" for="resumeIn" style="line-height:1.6">Upload resume</label>
-        <button class="ghost" id="resumeClear" style="display:none">Remove</button>
+        <label class="ghost aNight" for="resumeIn" style="line-height:1.6">Upload resume</label>
+        <button class="ghost aBad" id="resumeClear" style="display:none">Remove</button>
       </div>
       <input type="file" id="resumeIn" accept=".pdf,.doc,.docx,image/*" style="display:none">
     </section>
@@ -731,7 +769,7 @@
       <div class="packBox">
         <div class="packList" id="packList"></div>
         <div class="rowbtns" style="margin-top:0">
-          <button class="ghost" id="sendPack">Send the lot</button>
+          <button class="ghost aHome" id="sendPack">Send the lot</button>
         </div>
         <p class="hint" id="packMsg" style="margin-bottom:0"></p>
         <div class="quota" id="quotaLine"></div>
@@ -745,7 +783,7 @@
         <div class="pl">Summary</div>
         <div class="pv" id="profileOut"></div>
       </div>
-      <div class="rowbtns" style="margin-top:12px"><button class="ghost" id="copyProfile">Copy to clipboard</button></div>
+      <div class="rowbtns" style="margin-top:12px"><button class="ghost aNight" id="copyProfile">Copy to clipboard</button></div>
     </section>
   </div>
 
@@ -795,7 +833,7 @@
         <h2>Crew code</h2>
         <p class="hint">Same code on everyone's phone means the same board. No code, no board — keeps the crew's scores to the crew.</p>
         <input type="text" id="crewCode" class="crewIn" placeholder="e.g. CALLIDE-NS">
-        <div class="rowbtns"><button class="ghost" id="crewSave">Set the code</button></div>
+        <div class="rowbtns"><button class="ghost aTravel" id="crewSave">Set the code</button></div>
         <p class="hint" id="crewMsg"></p>
       </section>
 
@@ -804,7 +842,7 @@
         <p class="hint" id="boardWho"></p>
         <div id="boardList"></div>
         <div class="empty" id="boardEmpty">No scores yet. Go and have a go.</div>
-        <div class="rowbtns"><button class="ghost" id="boardClear">Clear the board</button></div>
+        <div class="rowbtns"><button class="ghost aBad" id="boardClear">Clear the board</button></div>
         <div class="warn">Scores live on this phone for now. The shared Google Sheet board behind the crew code is the next piece — this is the front end for it.</div>
       </section>
     </div>
@@ -826,6 +864,8 @@
   function hx(c){c=c.replace('#','');return[parseInt(c.substr(0,2),16),parseInt(c.substr(2,2),16),parseInt(c.substr(4,2),16)]}
   function hxs(a){return '#'+a.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('')}
   function mixc(a,b,t){const A=hx(a),B=hx(b);return hxs([0,1,2].map(i=>A[i]+(B[i]-A[i])*t))}
+  function lumOf(c){const r=hx(c);return(.299*r[0]+.587*r[1]+.114*r[2])/255}
+  function onColour(c){return lumOf(c)>0.55?'#12151A':'#FFFFFF'}
 
   const THEMES=[
     {id:'pit',n:'Pit Night',v:{bg:'#0C0A14',bg2:'#15111F',glow:'#241B3A',surface:'#1A1526','surface-2':'#241C33',
@@ -885,6 +925,10 @@
     themeIdx=i;
     const v=THEMES[i].v, r=document.documentElement;
     Object.keys(v).forEach(k=>r.style.setProperty('--'+k,v[k]));
+    // readable label colour for every accent, worked out from the theme itself
+    ['day','night','home','travel','bad','pj','muted'].forEach(k=>{
+      if(v[k]) r.style.setProperty('--on-'+k,onColour(v[k]));
+    });
     renderThemes();
     try{ if($('anchor')&&$('anchor').value) drawRing(); }catch(e){}
   }
@@ -951,8 +995,8 @@
     $('sAnchor').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     $('anchor').value=$('sAnchor').value; renderAnchorCheck();
   }
-  $('sNudgeBack').addEventListener('click',()=>sNudge(-1));
-  $('sNudgeFwd').addEventListener('click',()=>sNudge(1));
+  $('sNudgeBack').addEventListener('click',()=>sNudge(1));
+  $('sNudgeFwd').addEventListener('click',()=>sNudge(-1));
   $('sAnchor').addEventListener('input',()=>{$('anchor').value=$('sAnchor').value;renderAnchorCheck()});
   $('sCasual').addEventListener('click',()=>{$('sCasual').setAttribute('aria-pressed','true');$('sPerm').setAttribute('aria-pressed','false')});
   $('sPerm').addEventListener('click',()=>{$('sPerm').setAttribute('aria-pressed','true');$('sCasual').setAttribute('aria-pressed','false')});
@@ -1068,8 +1112,18 @@
     const trav=pattern.filter(x=>x==='T').length;
     $('posNote').textContent=home+' days home'+(trav?' ('+trav+' spent driving)':'');
   }
+  function matchPreset(){
+    const s2=pattern.join('');
+    presetIdx=PRESETS.findIndex(p=>p.p===s2);
+  }
   function renderPresets(){
     const box=$('presets');box.innerHTML='';
+    if(presetIdx===-1){
+      const c=document.createElement('button');
+      c.className='preset';c.textContent='Custom';c.setAttribute('aria-pressed','true');
+      c.title='Your own pattern — tap a preset to go back to a standard one';
+      box.appendChild(c);
+    }
     PRESETS.forEach((p,i)=>{
       const b=document.createElement('button');
       b.className='preset';b.textContent=p.n;b.setAttribute('aria-pressed',i===presetIdx);
@@ -1078,20 +1132,22 @@
     });
   }
   function renderChips(){
-    const box=$('chips'),ti=idxFor(today());box.innerHTML='';
-    pattern.forEach((t,i)=>{
+    const box=$('chips'),ti=idxFor(today()),t0=today();box.innerHTML='';
+    // runs from today forward so the dates read straight through, same order as the wheel
+    for(let k=0;k<pattern.length;k++){
+      const i=(ti+k)%pattern.length, t=pattern[i], d=new Date(t0.getTime()+k*dayMs);
       const b=document.createElement('button');
-      b.className='chip '+t+(i===ti?' today':'');
-      b.innerHTML='<span>'+dateFor(i).getDate()+'</span>'+SHORT[t];
-      b.setAttribute('aria-label',fmt(dateFor(i))+': '+NAME[t]);
-      b.addEventListener('click',()=>{pattern[i]=ORDER[(ORDER.indexOf(pattern[i])+1)%ORDER.length];presetIdx=-1;swipes=null;renderAll()});
+      b.className='chip '+t+(k===0?' today':'');
+      b.innerHTML='<span>'+d.getDate()+'</span>'+SHORT[t];
+      b.setAttribute('aria-label',fmt(d)+': '+NAME[t]);
+      b.addEventListener('click',()=>{pattern[i]=ORDER[(ORDER.indexOf(pattern[i])+1)%ORDER.length];matchPreset();swipes=null;renderAll()});
       box.appendChild(b);
-    });
+    }
   }
   function renderUpcoming(){
     const list=$('upcoming');list.innerHTML='';
     const t=today();let run=null;
-    for(let k=0;k<42;k++){
+    for(let k=0;k<28;k++){
       const d=new Date(t.getTime()+k*dayMs),type=pattern[idxFor(d)];
       if(run&&run.type===type){run.len++;run.end=d;continue}
       if(run)push(run);run={type,start:d,end:d,len:1};
@@ -1747,16 +1803,20 @@
 
   function renderAll(){drawRing();renderCore();renderPresets();renderChips();renderUpcoming();renderPay();renderSwipes();renderFatigue();renderAnchorCheck();renderPhoto();renderAwake();renderSite();renderPackage();renderCrib()}
 
-  if($('nudgeBack')) $('nudgeBack').addEventListener('click',()=>shiftAnchor(-1));
-  if($('nudgeFwd'))  $('nudgeFwd').addEventListener('click',()=>shiftAnchor(1));
-  $('addDay').addEventListener('click',()=>{pattern.push('O');presetIdx=-1;swipes=null;renderAll()});
-  $('delDay').addEventListener('click',()=>{if(pattern.length>2){pattern.pop();presetIdx=-1;swipes=null;renderAll()}});
+  // moving the anchor forward pushes today BACK through the pattern, so these are inverted
+  if($('nudgeBack')) $('nudgeBack').addEventListener('click',()=>shiftAnchor(1));
+  if($('nudgeFwd'))  $('nudgeFwd').addEventListener('click',()=>shiftAnchor(-1));
+  $('addDay').addEventListener('click',()=>{pattern.push('O');matchPreset();swipes=null;renderAll()});
+  $('delDay').addEventListener('click',()=>{if(pattern.length>2){pattern.pop();matchPreset();swipes=null;renderAll()}});
   $('segCasual').addEventListener('click',()=>setEmployment(true));
   $('segPerm').addEventListener('click',()=>setEmployment(false));
   ['anchor','rate','hours','superRate','alWeeks','km','startDate'].forEach(id=>
     $(id).addEventListener('input',()=>{swipes=null;renderAll()}));
   $('slip').addEventListener('input',checkSlip);
   ['wokeTime','wokeDay'].forEach(id=>$(id).addEventListener('input',()=>{renderAwake();save&&save()}));
+  ['depTime','campTime','fatLimit','restMin'].forEach(id=>{
+    if($(id)) $(id).addEventListener('input',()=>{renderFatigue();save&&save()});
+  });
   $('annualIn').addEventListener('input',()=>{renderPackage();save&&save()});
   setInterval(renderAwake, 60000);
 
@@ -1770,6 +1830,24 @@
     // last night of a block: on nights today, and tomorrow is not a shift
     const lastNight = cur==='N' && (nxt==='O'||nxt==='T');
     $('fatigue').classList.toggle('hide', !lastNight);
+    const el=$('fatCalc');
+    if(!lastNight || !el) return;
+    const sh=+$('hours').value||0;
+    const dep=$('depTime').value||'00:00', arr=$('campTime').value||'00:00';
+    const drive=spanHrs(dep,arr);
+    const lim=+$('fatLimit').value||14, rest=+$('restMin').value||4;
+    const total=sh+drive;
+    const sum='<b>'+sh.toFixed(1)+' hr shift + '+drive.toFixed(1)+' hr drive = '+
+              total.toFixed(1)+' hours.</b> ';
+    if(total>lim){
+      el.innerHTML=sum+'That is over your '+lim+' hour limit, so you need at least <b>'+rest+
+        ' hours rest</b> before you get behind the wheel. Sleep at camp, then drive.';
+      el.style.color='var(--text)';
+    }else{
+      el.innerHTML=sum+'Inside your '+lim+' hour limit \u2014 but you are still coming off nights, '+
+        'at the bottom of your body clock. A few hours sleep first is the safe call.';
+      el.style.color='var(--text)';
+    }
   }
 
   /* ================= ANCHOR CHECK & NUDGE ================= */
@@ -1791,7 +1869,7 @@
   /* ================= SHARE ================= */
   function rosterText(){
     const t=today();let runs=[],run=null;
-    for(let k=0;k<42;k++){
+    for(let k=0;k<28;k++){
       const d=new Date(t.getTime()+k*dayMs),ty=pattern[idxFor(d)];
       if(run&&run.type===ty){run.end=d;continue}
       if(run)runs.push(run);run={type:ty,start:d,end:d};
@@ -1804,7 +1882,7 @@
       const what={D:'Day shift',N:'Night shift',P:'PJ day',T:'Travelling',O:'HOME'}[r.type];
       return when+' — '+what;
     };
-    return 'My roster, next six weeks\n\n'+runs.map(line).join('\n')+
+    return 'My roster, next four weeks\n\n'+runs.map(line).join('\n')+
       '\n\nFrom The Ultimate Shift Engine';
   }
   function shareUrl(){
@@ -1812,16 +1890,42 @@
     return location.href.split('#')[0]+'#r='+btoa(JSON.stringify(payload));
   }
   function flash(msg){ $('shareMsg').textContent=msg; setTimeout(()=>$('shareMsg').textContent='',2600); }
+  function showLink(url,note){
+    // last resort: put the link on screen, already selected, so it can be copied by hand
+    $('shareMsg').innerHTML=(note?'<b>'+note+'</b><br>':'')+
+      '<input type="text" class="urlIn" id="linkOut" readonly value="'+url+'">';
+    const f=$('linkOut');
+    if(f){ f.focus(); f.setSelectionRange(0,f.value.length);
+           f.addEventListener('click',()=>f.setSelectionRange(0,f.value.length)); }
+  }
   if($('shareLink')) $('shareLink').addEventListener('click',async()=>{
     const url=shareUrl();
+    if(!location.protocol.startsWith('http')){
+      showLink(url,'This is a preview, not your live site. Sharing only works once the app is opened from its real web address.');
+      return;
+    }
     try{
-      if(navigator.share){ await navigator.share({title:'My roster',text:'My roster — opens straight in the Shift Engine, nothing to set up.',url}); return; }
-      await navigator.clipboard.writeText(url); flash('Link copied. Paste it to whoever needs it.');
-    }catch(e){ flash('Couldn\u2019t share here — try Copy as a message instead.'); }
+      if(navigator.share){
+        await navigator.share({title:'My roster',
+          text:'My roster. Open it, tap "Make this roster mine", then "Save as app instructions" and it sits on your home screen.',
+          url});
+        return;
+      }
+    }catch(e){ /* share sheet cancelled or blocked — fall through to copying */ }
+    try{
+      await navigator.clipboard.writeText(url);
+      flash('Link copied. Paste it to whoever needs it.');
+    }catch(e){
+      showLink(url,'Copy this link and send it:');
+    }
   });
   if($('shareText')) $('shareText').addEventListener('click',async()=>{
     try{ await navigator.clipboard.writeText(rosterText()); flash('Copied. Paste it into a message.'); }
-    catch(e){ flash('Couldn\u2019t copy here.'); }
+    catch(e){
+      $('shareMsg').innerHTML='<b>Copy this and paste it into a message:</b>'+
+        '<textarea class="urlIn" readonly rows="10" style="width:100%;margin-top:8px">'+
+        rosterText().replace(/</g,'&lt;')+'</textarea>';
+    }
   });
 
   /* ================= SAVE TO PHONE ================= */
@@ -1830,7 +1934,7 @@
               (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
     const inApp=/FBAN|FBAV|Instagram|Line\/|WhatsApp|Messenger/.test(navigator.userAgent);
     let b='';
-    if(fromLink) b+='<div class="iWarn"><b>Roster loaded.</b> Save it to your phone so it opens like an app from your home screen.</div>';
+    if(fromLink) b+='<div class="iWarn"><b>Roster loaded.</b> Save it as an app so it sits on your home screen and opens straight to your roster.</div>';
     if(inApp)    b+='<div class="iWarn">You\u2019ve opened this inside another app\u2019s browser. Tap the <b>&#8942;</b> or <b>&#8230;</b> menu and choose <b>Open in browser</b> first, or it won\u2019t save.</div>';
     const steps= ios
       ? ['Tap the <b>Share</b> button at the bottom of Safari (the square with an arrow)',
@@ -1856,12 +1960,27 @@
     pattern=d.p.split(''); presetIdx=-1;
     if(d.a) $('anchor').value=d.a;
     document.body.classList.add('viewmode');
+    try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
     $('setup').classList.add('hide');
     $('viewBanner').style.display='block';
-    $('viewBanner').innerHTML='<b>Shared roster.</b> This stays right on its own as the cycle rolls over &mdash; no need to ask again.';
+    $('viewBanner').innerHTML='<b>Someone shared their roster with you.</b> It stays right on its own as the cycle rolls over. '+
+      'Make it yours and you get the whole app &mdash; pay, payslip check, tickets, the lot.'+
+      '<div class="rowbtns"><button class="ghost aHome" id="adoptBtn">Make this roster mine</button></div>'+
+      '<div class="rowbtns"><button class="ghost aNight" id="exitView">Start my own instead</button></div>';
+    $('adoptBtn').addEventListener('click',adoptRoster);
+    $('exitView').addEventListener('click',()=>{ location.href=location.href.split('#')[0]; });
     renderAll();
-    setTimeout(()=>installSheet(true),900);
     return true;
+  }
+
+  function adoptRoster(){
+    document.body.classList.remove('viewmode');
+    try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+    $('viewBanner').style.display='none';
+    presetIdx=-1; swipes=null; ready=true;
+    setEmployment(true); setSkillMode(true); renderAll(); save();
+    window.scrollTo(0,0);
+    installSheet(true);
   }
 
 
@@ -1968,6 +2087,7 @@
       rate:$('rate').value, hours:$('hours').value, superRate:$('superRate').value,
       alWeeks:$('alWeeks').value, km:$('km').value,
       depTime:$('depTime').value, campTime:$('campTime').value,
+      fatLimit:$('fatLimit').value, restMin:$('restMin').value,
       machines:myMachines, tickets, photoData,
       wokeTime:$('wokeTime').value, wokeDay:$('wokeDay').value, annualIn:$('annualIn').value,
       crewCode, scores
@@ -1988,7 +2108,7 @@
     if(typeof d.presetIdx==='number') presetIdx=d.presetIdx;
     if(d.machines) myMachines=d.machines;
     if(Array.isArray(d.tickets)&&d.tickets.length) tickets=d.tickets;
-    ['anchor','startDate','rate','hours','superRate','alWeeks','km','depTime','campTime','wokeTime','wokeDay','annualIn']
+    ['anchor','startDate','rate','hours','superRate','alWeeks','km','depTime','campTime','wokeTime','wokeDay','annualIn','fatLimit','restMin']
       .forEach(k=>{ if(d[k]!==undefined&&$(k)) $(k).value=d[k]; });
     if(d.photoData) photoData=d.photoData;
     if(typeof d.themeIdx==='number' && THEMES[d.themeIdx]) applyTheme(d.themeIdx);
