@@ -1,12 +1,22 @@
-/* The Ultimate Shift Engine — crib game banter & distractions
-   Fourth bolt-on. Sits on top of the canvas as a DOM layer, so it needs
-   no changes to the game code itself.
+/* The Ultimate Shift Engine — crib game banter, distractions & tempo  (v2)
 
-   pointer-events:none throughout — tapping the screen must still tip the
-   bucket, so nothing here can ever swallow a tap.
+   Replaces crib-banter.js. Same filename in the repo, nothing else changes.
 
-   Reads the game state off the HUD: score going up is a hit, a life
-   disappearing is a miss, the overlay coming back is game over. */
+   v2 adds the difficulty curve WITHOUT touching index.html. The game's
+   speed() lives inside a closure we can't reach, so instead we control how
+   many physics steps run per animation frame. More steps = the whole game
+   runs faster: slew, gravity, the driver's patience timer, all of it.
+
+   The curve, by score:
+      0-250     normal        finding your feet
+      250-600   1.3x          picking up
+      600-1000  1.55x         flat out
+      1000-1400 1.15x         SMOKO - backs right off
+      1400-2000 1.65x         back into it
+      2000+     1.9x          hanging on
+
+   pointer-events:none on the whole overlay — tapping must still tip the
+   bucket, so nothing here can swallow a tap. */
 
 (function () {
   'use strict';
@@ -17,70 +27,98 @@
   var hudScore = $('hudScore');
   var hudLives = $('hudLives');
   var overlay = $('gameOverlay');
+  var cribPanel = $('tab-crib');
   if (!wrap || !hudScore || !overlay) return;
 
-  /* ---------- the banter ---------- */
+  function score() {
+    return parseInt(String(hudScore.textContent).replace(/[^0-9]/g, ''), 10) || 0;
+  }
 
-  // digger op, giving it to the truckie
+  function playing() {
+    return overlay.classList.contains('hide') &&
+           cribPanel && cribPanel.classList.contains('on');
+  }
+
+  /* ================= TEMPO ================= */
+
+  function tempo() {
+    var s = score();
+    if (s < 250)  return 1.00;
+    if (s < 600)  return 1.30;
+    if (s < 1000) return 1.55;
+    if (s < 1400) return 1.15;   // smoko
+    if (s < 2000) return 1.65;
+    return 1.90;
+  }
+
+  var rawRAF = window.requestAnimationFrame.bind(window);
+  var acc = 0;
+  var inLoop = false;
+  var reReg = null;
+
+  window.requestAnimationFrame = function (cb) {
+    // While we're driving extra steps, swallow the game's own re-registration
+    // and keep hold of it, otherwise each extra step spawns another loop.
+    if (inLoop) { reReg = cb; return 0; }
+
+    return rawRAF(function (t) {
+      if (!playing()) { acc = 0; cb(t); return; }
+
+      acc += tempo();
+      var steps = Math.floor(acc);
+      acc -= steps;
+
+      if (steps < 1) {            // running slow: skip this frame
+        window.requestAnimationFrame(cb);
+        return;
+      }
+
+      var next = cb;
+      for (var i = 0; i < steps; i++) {
+        inLoop = true;
+        reReg = null;
+        next(t);
+        inLoop = false;
+        if (!reReg) return;       // game ended, it stopped rescheduling
+        next = reReg;
+      }
+      window.requestAnimationFrame(next);
+    });
+  };
+
+  /* ================= BANTER ================= */
+
   var DIGGER = [
-    'Hurry up!',
-    'Get a wriggle on',
-    'Any day now',
-    'You reversing or parking?',
-    'Wakey wakey',
-    'Pull up, princess',
-    'I could dig it by hand quicker',
-    'Are we on smoko or what',
-    'Straighten her up',
-    'Come on, daylight burning'
+    'Hurry up!', 'Get a wriggle on', 'Any day now',
+    'You reversing or parking?', 'Wakey wakey', 'Pull up, princess',
+    'I could dig it by hand quicker', 'Are we on smoko or what',
+    'Straighten her up', 'Come on, daylight burning'
   ];
 
-  // digger op when it's going well
   var DIGGER_GOOD = [
-    'Beautiful',
-    'That will do',
-    'Load her up',
-    'Too easy',
-    'Off ya go'
+    'Beautiful', 'That will do', 'Load her up', 'Too easy', 'Off ya go'
   ];
 
-  // truckie, giving it back
   var TRUCKIE = [
-    'Piss off',
-    'Yeah yeah',
-    'Settle down',
-    'Watch the paint',
-    'Righto Picasso',
-    'Fill it properly',
-    'That was half a bucket',
-    'Keep your hair on',
-    'Some of us have a job to do',
-    'You right there champ?'
+    'Piss off', 'Yeah yeah', 'Settle down', 'Watch the paint',
+    'Righto Picasso', 'Fill it properly', 'That was half a bucket',
+    'Keep your hair on', 'Some of us have a job to do', 'You right there champ?'
   ];
 
-  // truckie when the operator drops one on the deck
   var TRUCKIE_MISS = [
-    'On the deck again!',
-    'Nice one Rembrandt',
-    'That is coming out of your pay',
-    'Bloody hopeless',
-    'Cleanup on aisle three',
-    'You are paying for that',
+    'On the deck again!', 'Nice one Rembrandt', 'That is coming out of your pay',
+    'Bloody hopeless', 'Cleanup on aisle three', 'You are paying for that',
     'Blind as a bat'
   ];
 
-  /* ---------- distractions ---------- */
   var CHATTER = [
-    'RADIO: smoko in five',
-    'RADIO: watch the pit road',
-    'RADIO: who is on the water cart',
-    'RADIO: crib truck is late',
-    'RADIO: dust it down mate',
-    'RADIO: supervisor doing a lap',
+    'RADIO: smoko in five', 'RADIO: watch the pit road',
+    'RADIO: who is on the water cart', 'RADIO: crib truck is late',
+    'RADIO: dust it down mate', 'RADIO: supervisor doing a lap',
     'RADIO: fuel truck inbound'
   ];
 
-  /* ---------- layer ---------- */
+  /* ---------- overlay ---------- */
   var css = document.createElement('style');
   css.textContent =
     '#cribFx{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:5}' +
@@ -98,9 +136,13 @@
       'text-transform:uppercase;color:var(--muted);background:rgba(0,0,0,.55);' +
       'opacity:0;transition:opacity .3s;text-align:center}' +
     '#cribRadio.on{opacity:1}' +
+    '#cribSmoko{position:absolute;left:0;right:0;top:38%;text-align:center;' +
+      'font-family:Archivo,system-ui,sans-serif;font-size:30px;font-weight:800;' +
+      'color:var(--home);opacity:0;transition:opacity .35s;' +
+      'text-shadow:0 3px 12px rgba(0,0,0,.6)}' +
+    '#cribSmoko.on{opacity:1}' +
     '.cdust{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 70%,' +
-      'rgba(190,160,120,.55),rgba(190,160,120,0) 70%);opacity:0;' +
-      'transition:opacity .5s}' +
+      'rgba(190,160,120,.55),rgba(190,160,120,0) 70%);opacity:0;transition:opacity .5s}' +
     '.cdust.on{opacity:1}' +
     '.cute{position:absolute;bottom:11%;width:46px;height:19px;border-radius:3px;' +
       'background:var(--home);opacity:.85}' +
@@ -113,20 +155,22 @@
 
   var fx = document.createElement('div');
   fx.id = 'cribFx';
-  fx.innerHTML = '<div id="cribRadio"></div><div class="cdust" id="cribDust"></div>';
+  fx.innerHTML = '<div id="cribRadio"></div>' +
+                 '<div class="cdust" id="cribDust"></div>' +
+                 '<div id="cribSmoko">SMOKO</div>';
   wrap.appendChild(fx);
 
   var radio = $('cribRadio');
   var dust = $('cribDust');
+  var smoko = $('cribSmoko');
 
   var pick = function (a) { return a[Math.floor(Math.random() * a.length)]; };
 
-  /* ---------- bubbles ---------- */
   var lastBubble = 0;
 
   function bubble(side, text, bad) {
     var now = Date.now();
-    if (now - lastBubble < 900) return;   // don't stack them
+    if (now - lastBubble < 900) return;
     lastBubble = now;
 
     var b = document.createElement('div');
@@ -142,7 +186,6 @@
     }, 1750);
   }
 
-  // a quick back-and-forth
   function exchange(first, firstText, secondList, bad) {
     bubble(first, firstText, bad);
     setTimeout(function () {
@@ -198,50 +241,32 @@
 
   /* ---------- watch the game ---------- */
   var running = false;
-  var score = 0, lives = 3;
+  var sc = 0, lives = 3;
   var lastChange = Date.now();
   var nextNag = 0, nextDistract = 0;
+  var smokoShown = false;
 
-  function num(el) {
-    return parseInt(String(el ? el.textContent : '0').replace(/[^0-9]/g, ''), 10) || 0;
-  }
   function lifeCount() {
     return (hudLives ? hudLives.textContent : '').replace(/[^\u25CF]/g, '').length;
   }
 
   function reset() {
-    score = 0; lives = 3;
+    sc = 0; lives = 3; acc = 0; smokoShown = false;
     lastChange = Date.now();
     nextNag = Date.now() + 5000;
     nextDistract = Date.now() + 9000;
     fx.querySelectorAll('.cbub,.cute,.cbird').forEach(function (n) { n.remove(); });
     radio.classList.remove('on');
     dust.classList.remove('on');
+    smoko.classList.remove('on');
   }
 
-  // overlay hidden = a game is running
-  new MutationObserver(function () {
-    var nowRunning = !overlay.classList.contains('hide');
-    if (running && nowRunning) {            // just ended
-      running = false;
-      setTimeout(function () {
-        fx.querySelectorAll('.cbub').forEach(function (n) { n.remove(); });
-      }, 200);
-    } else if (!running && !nowRunning) {   // just started
-      running = true;
-      reset();
-    }
-    running = !nowRunning;
-  }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
-
   setInterval(function () {
-    if (overlay.classList.contains('hide') === false) return;  // not playing
+    if (!playing()) { running = false; return; }
     if (!running) { running = true; reset(); }
 
-    var s = num(hudScore), l = lifeCount();
-    var now = Date.now();
+    var s = score(), l = lifeCount(), now = Date.now();
 
-    // dropped one on the deck
     if (l < lives) {
       lives = l;
       exchange('trk', pick(TRUCKIE_MISS), DIGGER, true);
@@ -251,29 +276,31 @@
     }
     lives = l;
 
-    if (s > score) {
-      var jump = s - score;
-      score = s;
+    // announce the let-up so it reads as deliberate, not a glitch
+    if (!smokoShown && s >= 1000 && s < 1400) {
+      smokoShown = true;
+      smoko.classList.add('on');
+      setTimeout(function () { smoko.classList.remove('on'); }, 1800);
+    }
+
+    if (s > sc) {
+      var jump = s - sc;
+      sc = s;
       lastChange = now;
       nextNag = now + 5500;
-      if (jump >= 60) {                       // full load bonus
-        exchange('dig', pick(DIGGER_GOOD), TRUCKIE);
-      } else if (Math.random() < 0.14) {
-        bubble('trk', pick(TRUCKIE));
-      }
+      if (jump >= 60) exchange('dig', pick(DIGGER_GOOD), TRUCKIE);
+      else if (Math.random() < 0.14) bubble('trk', pick(TRUCKIE));
       return;
     }
 
-    // nothing happening — the digger op gets impatient
     if (now > nextNag && now - lastChange > 4500) {
       exchange('dig', pick(DIGGER), TRUCKIE);
       nextNag = now + 7000 + Math.random() * 4000;
     }
 
-    // distractions build up as the score does
     if (now > nextDistract) {
       pick(DISTRACTIONS)();
-      var gap = score > 1500 ? 3500 : score > 700 ? 5500 : 8000;
+      var gap = sc > 1500 ? 3500 : sc > 700 ? 5500 : 8000;
       nextDistract = now + gap + Math.random() * gap * 0.5;
     }
   }, 220);
