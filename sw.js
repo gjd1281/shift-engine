@@ -11,7 +11,7 @@
      else
 */
 
-var VERSION = 'v3-2026-08-26';
+var VERSION = 'v4-2026-08-26';
 var CACHE = 'shift-engine-' + VERSION;
 
 var ASSETS = [
