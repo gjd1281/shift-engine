@@ -11,13 +11,14 @@
      else
 */
 
-var VERSION = 'v4-2026-08-26';
+var VERSION = 'v5-2026-08-26';
 var CACHE = 'shift-engine-' + VERSION;
 
 var ASSETS = [
   './',
   './index.html',
   './attachments.js',
+  './crib.js',
   './crib-banter.js',
   './manifest.webmanifest',
   './icon-192.png'
