@@ -16,21 +16,29 @@
    index.html, and every future change to this feature is a same-filename
    replacement. No hunting for a line number on a phone keyboard.
 
+   ----------------------------------------------------------------------------
+   VERSION HISTORY
+   v1  First version. Resolved each label to whichever calendar date with that
+       day-of-month sat CLOSEST to today.
+   v2  Fixed. The "closest" rule was wrong for this wheel. The wheel puts today
+       at the pointer and runs 28 days FORWARD from there, so the back half of
+       the ring is next month. With a 28-day forward ring, a label like "13"
+       when today is the 28th is 16 days ahead but only 15 days behind — so
+       "closest" reached backwards into last month and named the wrong day.
+       Now resolves forward only: the first calendar date on or after today
+       carrying that day-of-month. See WINDOW_MODE below if that ever changes.
+   ----------------------------------------------------------------------------
+
    HOW IT FINDS THE LABELS (no class names needed)
    The script does not need to know how the wheel is built. It looks for leaf
    elements whose entire text is a number between 1 and 31, works out which
    container holds the most of them (that's the wheel — nothing else on the
    page has ~28 bare numbers), and rewrites only those.
 
-   HOW IT WORKS OUT THE WEEKDAY
-   Each label is just a day-of-month. Across a 28-day window, any given
-   day-of-month can only be one real date, so the script picks whichever
-   calendar date with that number sits closest to today. Month and year
-   rollovers therefore handle themselves — no anchor date, no config.
-
    INSTALL
-   Add this one line in index.html, just before </body>, after the other
-   bolt-ons:
+   Already installed — this is a same-filename replacement of the existing
+   wheeldates.js. Upload it over the top; no index.html change needed. The
+   script tag is already on line 2159:
 
         <script src="wheeldates.js"></script>
 
@@ -47,6 +55,14 @@
   var DAY_POSITION = 'above'; // 'above' or 'below' the date number
   var MIN_LABELS = 12;        // ignore any container with fewer numbers than
                               // this, so the "12 / 28" cycle card is never hit
+
+  // How the ring relates to today. Change this ONLY if the wheel itself
+  // changes shape.
+  //   'forward'  — today sits at the pointer and the ring runs ahead of it.
+  //                This is how the wheel works now.
+  //   'centred'  — the ring straddles today, showing days behind as well as
+  //                ahead. Use this if a scroll-back view is ever added.
+  var WINDOW_MODE = 'forward';
 
   var SHORT_DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   var LETTER_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -86,21 +102,44 @@
     return new Date(n.getFullYear(), n.getMonth(), n.getDate());
   }
 
-  // Given a day-of-month (1–31), return the real calendar date nearest to
-  // today. Checks last month, this month and next month. The getDate() test
-  // throws out impossible dates — asking for the 31st of a 30-day month rolls
-  // over into the next month, and we don't want that one.
+  // Build a real date, or null if that day-of-month doesn't exist in that
+  // month. Asking for the 31st of a 30-day month silently rolls into the next
+  // month, so the getDate() check throws those away rather than letting a
+  // wrong date through.
+  function makeDate(year, monthIndex, dayOfMonth) {
+    var d = new Date(year, monthIndex, dayOfMonth);
+    return d.getDate() === dayOfMonth ? d : null;
+  }
+
+  // FORWARD MODE — the fix in v2.
+  // Returns the first calendar date on or after today with this day-of-month.
+  // Checks this month, then the next two (two, not one, because a day like the
+  // 31st can be missing from the month in between).
+  function forwardDateFor(dayOfMonth, today) {
+    for (var offset = 0; offset <= 2; offset++) {
+      var candidate = makeDate(
+        today.getFullYear(),
+        today.getMonth() + offset,
+        dayOfMonth
+      );
+      if (candidate && candidate.getTime() >= today.getTime()) return candidate;
+    }
+    return null;
+  }
+
+  // CENTRED MODE — the v1 behaviour, kept for a ring that shows past days too.
+  // Returns whichever candidate date sits closest to today in either direction.
   function nearestDateFor(dayOfMonth, today) {
     var best = null;
     var bestGap = Infinity;
 
     for (var offset = -1; offset <= 1; offset++) {
-      var candidate = new Date(
+      var candidate = makeDate(
         today.getFullYear(),
         today.getMonth() + offset,
         dayOfMonth
       );
-      if (candidate.getDate() !== dayOfMonth) continue; // rolled over, skip
+      if (!candidate) continue;
       var gap = Math.abs(candidate.getTime() - today.getTime());
       if (gap < bestGap) {
         bestGap = gap;
@@ -108,6 +147,13 @@
       }
     }
     return best;
+  }
+
+  // Single entry point so the main pass doesn't care which mode is active.
+  function resolveDate(dayOfMonth, today) {
+    return WINDOW_MODE === 'centred'
+      ? nearestDateFor(dayOfMonth, today)
+      : forwardDateFor(dayOfMonth, today);
   }
 
   function dayNameFor(date) {
@@ -251,7 +297,7 @@
       // Only touch numbers that live inside the wheel.
       if (!container.contains(item.el)) continue;
 
-      var date = nearestDateFor(item.num, today);
+      var date = resolveDate(item.num, today);
       if (!date) continue;
 
       var dayText = dayNameFor(date);
