@@ -1,5 +1,5 @@
 /* ============================================================================
-   holidays.js  —  The Ultimate Shift Engine        v2
+   holidays.js  —  The Ultimate Shift Engine        v3
    ----------------------------------------------------------------------------
    WHAT THIS DOES
      Adds a "Holidays" card directly under the roster wheel, above the
@@ -23,30 +23,40 @@
      Drop holidays.js in the repo root next to index.html, then add ONE line
      just before </body>, after the other bolt-ons:
 
-         <script src="holidays.js"></script>
+         <script src="holidays.js?v=3"></script>
 
-     Nothing else in index.html changes.
+     Nothing else in index.html changes. Bump the ?v= number whenever this file
+     is replaced, or phones will keep serving the cached copy.
 
-   DESIGN NOTES (the non-obvious bits)
+   WHAT CHANGED IN v3
+     v2 found the wheel by grouping day numbers under their shared parent. Once
+     wheeldates.js started adding a weekday above each date, every number ended
+     up in its own little wrapper — 28 groups of one, no group big enough to
+     look like a wheel, so no badges were ever drawn. v3 walks UP through
+     ancestor levels until a group of roughly 28 appears, then checks that group
+     actually forms a circle before trusting it. It also stopped relying on DOM
+     order and now sorts cells by their angle around the wheel starting from the
+     pointer, which survives any future change to how the wheel is built.
+
+   DESIGN NOTES (the other non-obvious bits)
      1. Colours are sampled from the running page rather than hard-coded, so the
         card and sheet follow whichever of the six themes is active.
      2. Badges are drawn in a fixed-position overlay layer over the top of the
         wheel. Nothing in the wheel's own markup is touched, so wheeldates.js
         and anything drawn later can't fight with it.
-     3. Badge placement is RADIAL. The date numbers sit outside the ring and the
-        shift tiles sit inside it, so the badge is pushed from the date number
-        toward the wheel centre by CFG.badgeInward. The centre is worked out
-        from the average position of all 28 cells — no assumptions about how the
-        wheel is built.
+     3. Badge placement is RADIAL: pushed from the date number toward the wheel
+        centre by CFG.badgeInward, because the numbers sit outside the ring and
+        the shift tiles sit inside it.
      4. Storage is localStorage, not IndexedDB. Holidays are a few hundred bytes
         of text; the quota problem that pushed attachments into IndexedDB was
         base64 photos, which this file never touches.
 
-   PUBLIC API (for a future Pay tab / leave accrual)
+   PUBLIC API
      window.SEHolidays.getAll()            -> array of records
      window.SEHolidays.isHoliday(dateObj)  -> record or null
      window.SEHolidays.refresh()           -> rebuild and redraw now
      window.SEHolidays.open()              -> open the sheet
+     window.SEHolidays.debug()             -> log what the wheel detection found
 ============================================================================ */
 
 (function () {
@@ -61,10 +71,6 @@
     // localStorage key. Versioned so a future format change can migrate cleanly.
     storageKey: 'se_holidays_v1',
 
-    // Day 0 of the wheel. The wheel puts TODAY at the pointer and runs 28 days
-    // forward, so cell index 0 = today. If that ever changes, change this.
-    wheelStartOffset: 0,
-
     // How far to push the badge from the date number toward the wheel centre,
     // as a fraction of the distance to the centre. 0 = sits on the date number,
     // 0.25 = a quarter of the way in. THIS IS THE ONE NUMBER TO NUDGE if the
@@ -74,9 +80,18 @@
     // Badge size in px on the wheel.
     badgeSize: 15,
 
-    // Selectors tried first when looking for the wheel. Auto-detection handles
-    // it if none match; this is just a shortcut.
-    wheelSelectors: ['#wheel', '.wheel', '#roster-wheel', '.roster-wheel', '[data-wheel]'],
+    // Acceptable size for the ring of day numbers. The wheel draws 28; the range
+    // gives room for a future 14 or 35 day cycle.
+    minCells: 12,
+    maxCells: 45,
+
+    // How circular a candidate group has to be before it's accepted as the
+    // wheel. Spread of the radii divided by the average radius — a true ring is
+    // near 0, a paragraph of numbers is way above this.
+    ringTolerance: 0.3,
+
+    // How many ancestor levels to climb looking for the ring.
+    maxDepth: 6,
 
     // Words used to find the legend row, so the card can be slotted above it.
     legendWords: ['HOME', 'TRAVEL', 'NIGHT']
@@ -215,8 +230,6 @@
     if (cs.backgroundColor && cs.backgroundColor !== 'rgba(0, 0, 0, 0)') theme.bg = cs.backgroundColor;
     if (cs.color) theme.fg = cs.color;
 
-    // Borrow the accent from the active tab's underline or text colour if one
-    // can be found; otherwise fall back to the Shift Engine orange.
     var act = document.querySelector('.tab.active, .active, [aria-selected="true"]');
     if (act) {
       var as = getComputedStyle(act);
@@ -227,55 +240,134 @@
 
   /* ==========================================================================
      5. FINDING THE WHEEL
+     This is the part v2 got wrong. See the header note.
+
+     The approach: collect every leaf element whose text is just a 1-2 digit
+     number, then group them by ancestor at depth 1, then depth 2, and so on.
+     Each date number lives inside its own wrapper (weekday label above, number
+     below), so the ring only appears once we've climbed past that wrapper. At
+     each depth, any group of roughly the right size is checked for actually
+     being a circle before it's accepted.
      ========================================================================== */
 
-  var cellCache = null, cacheStamp = 0;
+  var cellCache = null, cacheStamp = 0, lastDebug = null;
 
-  // Find the elements holding each day number on the wheel.
-  // Heuristic: the biggest group of sibling leaf elements whose text is just a
-  // 1-2 digit number. The weekday labels wheeldates.js adds ("MON") are
-  // non-numeric and the D/N/T tiles are letters, so neither can be picked up by
-  // mistake.
+  function ancestorAt(el, depth) {
+    var n = el;
+    for (var i = 0; i < depth && n; i++) n = n.parentNode;
+    return (n && n.nodeType === 1) ? n : null;
+  }
+
+  // Cheap identity for a node, used only for grouping.
+  function groupKey(node) {
+    if (!node.__seHolKey) node.__seHolKey = 'g' + Math.random().toString(36).slice(2);
+    return node.__seHolKey;
+  }
+
+  // Is this set of boxes arranged in a circle? Returns null if not, otherwise
+  // the centre and how tight the ring is (lower = rounder).
+  function ringTest(items) {
+    var i, cx = 0, cy = 0, n = items.length;
+    for (i = 0; i < n; i++) { cx += items[i].x; cy += items[i].y; }
+    cx /= n; cy /= n;
+
+    var radii = [], sum = 0;
+    for (i = 0; i < n; i++) {
+      var dx = items[i].x - cx, dy = items[i].y - cy;
+      var r = Math.sqrt(dx * dx + dy * dy);
+      radii.push(r); sum += r;
+    }
+    var mean = sum / n;
+    if (mean < 40) return null; // too tightly clustered to be a wheel
+
+    var varsum = 0;
+    for (i = 0; i < n; i++) varsum += Math.pow(radii[i] - mean, 2);
+    var spread = Math.sqrt(varsum / n) / mean;
+
+    if (spread > CFG.ringTolerance) return null;
+    return { cx: cx, cy: cy, spread: spread };
+  }
+
+  // Clockwise angle from straight up, 0 to 2π. Today sits at the pointer, so
+  // sorting on this puts the days in roster order no matter what order they
+  // happen to appear in the markup.
+  function clockAngle(x, y, cx, cy) {
+    var a = Math.atan2(x - cx, cy - y);   // 0 = straight up, grows clockwise
+    return a < 0 ? a + Math.PI * 2 : a;
+  }
+
   function findDayCells() {
     // Re-detect at most once a second; this runs on scroll.
     if (cellCache && Date.now() - cacheStamp < 1000) return cellCache;
 
-    var root = null;
-    for (var i = 0; i < CFG.wheelSelectors.length; i++) {
-      root = document.querySelector(CFG.wheelSelectors[i]);
-      if (root) break;
-    }
-    var scope = root || document.body;
+    // --- collect candidate day numbers -------------------------------------
+    var leaves = document.body.querySelectorAll('text, tspan, div, span, li, td, b, strong, p');
+    var items = [], el, box;
 
-    var leaves = scope.querySelectorAll('text, tspan, div, span, li, td, b, strong');
-    var groups = {}, keys = [];
-
-    for (var j = 0; j < leaves.length; j++) {
-      var el = leaves[j];
-      if (el.children.length) continue;
-      if (!/^\d{1,2}$/.test((el.textContent || '').trim())) continue;
-      if (!el.parentNode) continue;
-
-      var key = groupKey(el.parentNode); // group by parent to find one ring
-      if (!groups[key]) { groups[key] = []; keys.push(key); }
-      groups[key].push(el);
+    for (var i = 0; i < leaves.length; i++) {
+      el = leaves[i];
+      if (el.children.length) continue;                                  // leaves only
+      if (!/^\d{1,2}$/.test((el.textContent || '').trim())) continue;    // just a number
+      box = el.getBoundingClientRect();
+      if (!box.width && !box.height) continue;                           // not on screen
+      items.push({ el: el, x: box.left + box.width / 2, y: box.top + box.height / 2 });
     }
 
-    var best = null;
-    for (var k = 0; k < keys.length; k++) {
-      var g = groups[keys[k]];
-      if (g.length >= 20 && (!best || g.length > best.length)) best = g;
+    // --- climb the tree looking for a ring ----------------------------------
+    var winner = null;
+
+    for (var depth = 1; depth <= CFG.maxDepth && !winner; depth++) {
+      var groups = {}, keys = [];
+
+      for (var j = 0; j < items.length; j++) {
+        var anc = ancestorAt(items[j].el, depth);
+        if (!anc) continue;
+        var key = groupKey(anc);
+        if (!groups[key]) { groups[key] = []; keys.push(key); }
+        groups[key].push(items[j]);
+      }
+
+      for (var k = 0; k < keys.length; k++) {
+        var g = groups[keys[k]];
+        if (g.length < CFG.minCells || g.length > CFG.maxCells) continue;
+
+        var ring = ringTest(g);
+        if (!ring) continue;
+
+        // Prefer the roundest ring at this depth.
+        if (!winner || ring.spread < winner.spread) {
+          winner = { items: g, cx: ring.cx, cy: ring.cy, spread: ring.spread, depth: depth };
+        }
+      }
     }
 
-    cellCache = best;
+    if (!winner) {
+      lastDebug = { numbersFound: items.length, ring: null };
+      cellCache = null; cacheStamp = Date.now();
+      return null;
+    }
+
+    // --- put them in roster order -------------------------------------------
+    // Today is at the pointer (straight up) and the wheel runs clockwise from
+    // there, so clockwise angle from vertical IS the day index.
+    var cx = winner.cx, cy = winner.cy;
+    winner.items.sort(function (a, b) {
+      return clockAngle(a.x, a.y, cx, cy) - clockAngle(b.x, b.y, cx, cy);
+    });
+
+    var cells = [];
+    for (var m = 0; m < winner.items.length; m++) cells.push(winner.items[m].el);
+
+    lastDebug = {
+      numbersFound: items.length,
+      ring: { cells: cells.length, depth: winner.depth, roundness: winner.spread.toFixed(3) },
+      firstCell: (cells[0].textContent || '').trim(),
+      lastCell: (cells[cells.length - 1].textContent || '').trim()
+    };
+
+    cellCache = cells;
     cacheStamp = Date.now();
-    return best;
-  }
-
-  // Cheap identity for a parent node, used only for grouping.
-  function groupKey(node) {
-    if (!node.__seHolKey) node.__seHolKey = 'g' + Math.random().toString(36).slice(2);
-    return node.__seHolKey;
+    return cells;
   }
 
   // Walk up from the cells until we find the element containing all of them.
@@ -297,8 +389,8 @@
   var card = null;
 
   // The legend row is the landmark: the card goes immediately before it. Looks
-  // for the smallest element that carries all the legend words, so we don't
-  // grab a big wrapper by mistake.
+  // for the smallest element carrying all the legend words, so we don't grab a
+  // big wrapper by mistake.
   function findLegend() {
     var all = document.querySelectorAll('div, p, ul, section');
     var best = null;
@@ -326,8 +418,7 @@
       anchorParent = legend.parentNode;
       anchorBefore = legend;
     } else {
-      // Fallback: straight after the wheel.
-      var wc = wheelContainer(findDayCells());
+      var wc = wheelContainer(findDayCells());     // fallback: straight after the wheel
       if (!wc || !wc.parentNode) return false;
       anchorParent = wc.parentNode;
       anchorBefore = wc.nextSibling;
@@ -432,7 +523,6 @@
 
     document.body.appendChild(sheet);
 
-    // Type chips
     var wrap = sheet.querySelector('#se-hol-types');
     TYPES.forEach(function (t) {
       var chip = document.createElement('button');
@@ -584,6 +674,7 @@
 
   function closeSheet() {
     if (sheet) sheet.style.display = 'none';
+    cellCache = null;   // the wheel may have been off-screen while the sheet was up
     drawBadges();
   }
 
@@ -614,8 +705,9 @@
     var cells = findDayCells();
     if (!cells || !cells.length) return hideBadges();
 
-    // Wheel centre = average of every cell's centre. That works because the day
-    // numbers are spaced evenly around a full circle.
+    // Recompute the centre from where things are RIGHT NOW: the badge layer is
+    // fixed-position, so every coordinate shifts as the page scrolls. Cell
+    // ORDER doesn't change, which is why that's worked out only at detection.
     var sx = 0, sy = 0, boxes = [], visible = 0, c, bx;
     for (c = 0; c < cells.length; c++) {
       bx = cells[c].getBoundingClientRect();
@@ -635,7 +727,7 @@
     var t0 = today(), vh = window.innerHeight, vw = window.innerWidth, half = CFG.badgeSize / 2;
 
     for (var i = 0; i < cells.length; i++) {
-      var d = addDays(t0, i + CFG.wheelStartOffset);
+      var d = addDays(t0, i);            // cell 0 = today, then clockwise
       var rec = dateIndex[iso(d)];
       if (!rec) continue;
 
@@ -703,6 +795,11 @@
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden) { cellCache = null; paintCard(); queueDraw(); }
     });
+
+    // The wheel often finishes drawing after this script boots, so take a few
+    // more passes over the first couple of seconds.
+    setTimeout(function () { cellCache = null; queueDraw(); }, 600);
+    setTimeout(function () { cellCache = null; queueDraw(); }, 1800);
   }
 
   /* ==========================================================================
@@ -723,12 +820,28 @@
       else console.warn('[holidays] wheel/legend not found — card not added');
     })();
 
-    // Public API for a future Pay tab / leave accrual.
     window.SEHolidays = {
       getAll: function () { return records.slice(); },
       isHoliday: function (dateObj) { return dateIndex[iso(dateObj)] || null; },
       refresh: function () { cellCache = null; refreshAll(); },
-      open: openSheet
+      open: openSheet,
+
+      // Reports what the wheel detection actually found. Also shown as an
+      // on-screen alert so it's readable on a phone with no console.
+      debug: function () {
+        cellCache = null;
+        findDayCells();
+        var d = lastDebug || {};
+        var txt = 'Day numbers found: ' + (d.numbersFound || 0) + '\n' +
+                  (d.ring ? ('Ring: ' + d.ring.cells + ' cells, depth ' + d.ring.depth +
+                             ', roundness ' + d.ring.roundness + '\nFirst: ' + d.firstCell +
+                             '  Last: ' + d.lastCell)
+                          : 'Ring: NOT FOUND') +
+                  '\nHolidays saved: ' + records.length;
+        try { alert(txt); } catch (e) {}
+        console.log('[holidays]', d);
+        return d;
+      }
     };
   }
 
